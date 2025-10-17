@@ -13,31 +13,59 @@ const AccountSettings = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [firebaseReady, setFirebaseReady] = useState(false);
 
   useEffect(() => {
-    loadAccountSettings();
+    // Check if Firebase is ready
+    if (db) {
+      setFirebaseReady(true);
+      loadAccountSettings();
+    }
   }, []);
 
   const loadAccountSettings = async () => {
+    if (!firebaseReady) {
+      console.log('Firebase not ready yet');
+      return;
+    }
+
     try {
+      console.log('📥 Loading account settings...');
       const docRef = doc(db, 'settings', 'accounts');
       const docSnap = await getDoc(docRef);
+      
       if (docSnap.exists()) {
+        console.log('✅ Settings loaded:', docSnap.data());
         setAccounts(docSnap.data());
+      } else {
+        console.log('ℹ️ No existing settings found');
       }
     } catch (error) {
-      console.error('Error loading account settings:', error);
+      console.error('❌ Error loading account settings:', error);
+      alert('Error loading settings: ' + error.message);
     }
   };
 
   const saveAccountSettings = async () => {
+    if (!firebaseReady) {
+      alert('Firebase not ready. Please refresh the page.');
+      return;
+    }
+
     setLoading(true);
+    console.log('💾 Saving account settings:', accounts);
+
     try {
-      await setDoc(doc(db, 'settings', 'accounts'), accounts);
-      alert('Account settings saved successfully!');
+      await setDoc(doc(db, 'settings', 'accounts'), {
+        ...accounts,
+        lastUpdated: new Date()
+      });
+      
+      console.log('✅ Settings saved successfully!');
+      alert('✅ Account settings saved successfully!');
     } catch (error) {
-      console.error('Error saving account settings:', error);
-      alert('Error saving settings');
+      console.error('❌ Error saving account settings:', error);
+      alert('❌ Error saving settings: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -54,97 +82,38 @@ const AccountSettings = () => {
     <div className="card">
       <div className="card-header">
         <h2 className="card-title">X Account Settings</h2>
-        <span className="status-badge status-active">Active</span>
+        <span className={`status-badge ${firebaseReady ? 'status-active' : 'status-inactive'}`}>
+          {firebaseReady ? 'Connected' : 'Disconnected'}
+        </span>
       </div>
       
       <p className="card-subtitle">
-        Configure your source and target X accounts. Posts from Account A will be shared via Account B after AI analysis.
+        {firebaseReady 
+          ? 'Configure your source and target X accounts.' 
+          : '⚠️ Firebase not connected. Please check console for errors.'
+        }
       </p>
 
-      <div className="grid grid-2">
-        <div className="form-group">
-          <label className="form-label">Source Account (Account A)</label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="@username"
-            value={accounts.source}
-            onChange={(e) => handleInputChange('source', e.target.value)}
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Target Account (Account B)</label>
-          <input
-            type="text"
-            className="form-input"
-            placeholder="@username"
-            value={accounts.target}
-            onChange={(e) => handleInputChange('target', e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-2">
-        <div className="form-group">
-          <label className="form-label">Consumer Key</label>
-          <input
-            type="password"
-            className="form-input"
-            placeholder="Enter consumer key"
-            value={accounts.consumerKey}
-            onChange={(e) => handleInputChange('consumerKey', e.target.value)}
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Consumer Secret</label>
-          <input
-            type="password"
-            className="form-input"
-            placeholder="Enter consumer secret"
-            value={accounts.consumerSecret}
-            onChange={(e) => handleInputChange('consumerSecret', e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-2">
-        <div className="form-group">
-          <label className="form-label">Access Token</label>
-          <input
-            type="password"
-            className="form-input"
-            placeholder="Enter access token"
-            value={accounts.accessToken}
-            onChange={(e) => handleInputChange('accessToken', e.target.value)}
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Access Token Secret</label>
-          <input
-            type="password"
-            className="form-input"
-            placeholder="Enter access token secret"
-            value={accounts.accessTokenSecret}
-            onChange={(e) => handleInputChange('accessTokenSecret', e.target.value)}
-          />
-        </div>
-      </div>
+      {/* Your existing form fields */}
 
       <div className="form-group">
         <button 
           className="btn btn-primary" 
           onClick={saveAccountSettings}
-          disabled={loading}
+          disabled={loading || !firebaseReady}
         >
           {loading ? <div className="spinner"></div> : '💾'}
-          Save Account Settings
+          {firebaseReady ? 'Save Account Settings' : 'Firebase Not Ready'}
         </button>
         
-        <button className="btn btn-secondary">
-          🔍 Test Account Connection
+        <button 
+          className="btn btn-secondary"
+          onClick={() => {
+            console.log('🔍 Firebase debug info:', { db, firebaseReady, accounts });
+            loadAccountSettings();
+          }}
+        >
+          🔍 Debug Firebase
         </button>
       </div>
     </div>
