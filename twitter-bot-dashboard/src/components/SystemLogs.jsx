@@ -515,7 +515,7 @@ const SystemLogs = ({ user }) => {
           <p><strong>Current Filter:</strong> {filter} ({filteredLogs.length} logs)</p>
           <p><strong>Display Limit:</strong> {logLimit} logs</p>
           <p><strong>Auto-refresh:</strong> {autoRefresh ? 'Enabled' : 'Disabled'}</p>
-          <p><strong>Collection:</strong> systemLogs (user: {user.uid})</p>
+          {/* <p><strong>Collection:</strong> systemLogs (user: {user.uid})</p> */}
         </div>
       )}
     </div>

@@ -296,7 +296,7 @@ const NewsSources = ({ user }) => {
           <p><strong>Sources Configured:</strong> {sources.filter(url => url.trim() !== '').length}</p>
           <p><strong>Scan Frequency:</strong> Every {Math.round(scanFrequency / 60)} minutes</p>
           <p><strong>Next Scan:</strong> Approximately {Math.round(scanFrequency / 60)} minutes from now</p>
-          <p><strong>Collection:</strong> settings/news_{user.uid}</p>
+          {/* <p><strong>Collection:</strong> settings/news_{user.uid}</p> */}
         </div>
       )}
     </div>

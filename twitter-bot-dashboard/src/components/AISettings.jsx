@@ -287,7 +287,7 @@ const AISettings = ({ user }) => {
           <h4>AI Settings Status:</h4>
           <p><strong>User:</strong> {user.email}</p>
           <p><strong>Collection:</strong> settings</p>
-          <p><strong>Document:</strong> ai_{user.uid}</p>
+          {/* <p><strong>Document:</strong> ai_{user.uid}</p> */}
           <p><strong>Keywords:</strong> {settings.keywords.length} configured</p>
           <p><strong>Sentiment Analysis:</strong> {settings.enableSentiment ? 'Enabled' : 'Disabled'}</p>
           <p><strong>Auto-approval:</strong> {settings.requireApproval ? 'Disabled' : 'Enabled'}</p>

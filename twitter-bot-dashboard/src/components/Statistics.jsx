@@ -423,7 +423,7 @@ const Statistics = ({ user }) => {
           <h4>Statistics Overview:</h4>
           <p><strong>User:</strong> {user.email}</p>
           <p><strong>Data Scope:</strong> User-specific statistics</p>
-          <p><strong>Collection:</strong> statistics/current_{user.uid}</p>
+          {/* <p><strong>Collection:</strong> statistics/current_{user.uid}</p> */}
           <p><strong>Real-time Updates:</strong> Enabled</p>
           <p><strong>Total Operations:</strong> {stats.totalScanned + stats.posted + stats.rejected}</p>
         </div>

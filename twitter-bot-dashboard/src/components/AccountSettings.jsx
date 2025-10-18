@@ -348,10 +348,10 @@ const AccountSettings = ({ user }) => {
       {user && (
         <div style={{ marginTop: '1rem', padding: '1rem', background: '#4e4e4eff', borderRadius: '8px' }}>
           <h4>Firestore Status:</h4>
-          <p><strong>User ID:</strong> {user.uid}</p>
+          {/* <p><strong>User ID:</strong> {user.uid}</p> */}
           <p><strong>User Email:</strong> {user.email}</p>
           <p><strong>Collection:</strong> settings</p>
-          <p><strong>Document:</strong> accounts_{user.uid}</p>
+          {/* <p><strong>Document:</strong> accounts_{user.uid}</p> */}
           <p><strong>Auto-creation:</strong> Will be created on first save</p>
         </div>
       )}
