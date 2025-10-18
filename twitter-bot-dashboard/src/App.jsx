@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { auth } from './services/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import Header from './components/Header';
+import Login from './components/Login';
 import AccountSettings from './components/AccountSettings';
 import NewsSources from './components/NewsSources';
 import FoundContents from './components/FoundContents';
@@ -9,7 +12,20 @@ import SystemLogs from './components/SystemLogs';
 import './styles/App.css';
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('account');
+
+  useEffect(() => {
+    // Listen for auth state changes
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setLoading(false);
+      console.log('👤 Auth state changed:', user ? user.email : 'No user');
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const scrollToSection = (sectionId) => {
     setActiveSection(sectionId);
@@ -22,33 +38,50 @@ function App() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="spinner-large"></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login user={user} setUser={setUser} />;
+  }
+
   return (
     <div className="app">
-      <Header activeSection={activeSection} scrollToSection={scrollToSection} />
+      <Header 
+        user={user} 
+        activeSection={activeSection} 
+        scrollToSection={scrollToSection} 
+      />
       
       <main className="main-content">
         <section id="account" className="section">
-          <AccountSettings />
+          <AccountSettings user={user} />
         </section>
         
         <section id="news" className="section">
-          <NewsSources />
+          <NewsSources user={user} />
         </section>
         
         <section id="contents" className="section">
-          <FoundContents />
+          <FoundContents user={user} />
         </section>
         
         <section id="ai" className="section">
-          <AISettings />
+          <AISettings user={user} />
         </section>
         
         <section id="stats" className="section">
-          <Statistics />
+          <Statistics user={user} />
         </section>
         
         <section id="logs" className="section">
-          <SystemLogs />
+          <SystemLogs user={user} />
         </section>
       </main>
     </div>

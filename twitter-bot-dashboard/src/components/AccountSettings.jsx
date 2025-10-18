@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../services/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-const AccountSettings = () => {
+const AccountSettings = ({ user }) => {
   const [accounts, setAccounts] = useState({
     source: '',
     target: '',
@@ -16,8 +16,10 @@ const AccountSettings = () => {
   const [saveStatus, setSaveStatus] = useState('');
 
   useEffect(() => {
-    loadAccountSettings();
-  }, []);
+    if (user) {
+      loadAccountSettings();
+    }
+  }, [user]);
 
   const loadAccountSettings = async () => {
     try {
@@ -25,18 +27,24 @@ const AccountSettings = () => {
         setSaveStatus('❌ Firebase not initialized');
         return;
       }
+
+      if (!user) {
+        setSaveStatus('⚠️ Please sign in to load settings');
+        return;
+      }
       
-      const docRef = doc(db, 'settings', 'accounts');
+      // Use user-specific document path that matches your Firestore rules
+      const docRef = doc(db, 'settings', `accounts_${user.uid}`);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
         const data = docSnap.data();
         console.log('📥 Loaded account settings:', data);
         setAccounts(data);
-        setSaveStatus('✅ Settings loaded successfully');
+        setSaveStatus(`👤 Loaded settings for: ${user.email}`); // Changed this line
       } else {
         console.log('No existing settings found - will create on first save');
-        setSaveStatus('⚠️ No settings found. Configure and save to create.');
+        setSaveStatus(`👤 Signed in as: ${user.email} - Configure and save to create settings.`);
         // Initialize with empty values
         setAccounts({
           source: '',
@@ -59,6 +67,11 @@ const AccountSettings = () => {
       return;
     }
 
+    if (!user) {
+      setSaveStatus('❌ Please sign in to save settings');
+      return;
+    }
+
     // Validate required fields
     if (!accounts.source || !accounts.target) {
       setSaveStatus('❌ Please fill in Source and Target account usernames');
@@ -69,10 +82,17 @@ const AccountSettings = () => {
     setSaveStatus('Saving...');
     
     try {
-      // This will AUTOMATICALLY create the 'settings' collection and 'accounts' document
-      await setDoc(doc(db, 'settings', 'accounts'), accounts);
+      // Save to user-specific document that matches your Firestore rules
+      await setDoc(doc(db, 'settings', `accounts_${user.uid}`), {
+        ...accounts,
+        userId: user.uid,
+        userEmail: user.email,
+        lastUpdated: new Date(),
+        createdAt: accounts.createdAt || new Date()
+      });
+      
       console.log('✅ Settings saved and document created:', accounts);
-      setSaveStatus('✅ Account settings saved successfully! Document created in Firestore.');
+      setSaveStatus(`✅ Settings saved for: ${user.email}`); // Changed this line
       
       // Clear status after 3 seconds
       setTimeout(() => setSaveStatus(''), 3000);
@@ -97,8 +117,13 @@ const AccountSettings = () => {
         setSaveStatus('❌ Firebase not initialized');
         return;
       }
+
+      if (!user) {
+        setSaveStatus('❌ Please sign in to initialize Firestore');
+        return;
+      }
       
-      // Create initial documents with default values
+      // Create initial documents with default values for this user
       const initialSettings = {
         source: '',
         target: '', 
@@ -106,25 +131,74 @@ const AccountSettings = () => {
         consumerSecret: '',
         accessToken: '',
         accessTokenSecret: '',
+        userId: user.uid,
+        userEmail: user.email,
         createdAt: new Date()
       };
       
-      await setDoc(doc(db, 'settings', 'accounts'), initialSettings);
+      await setDoc(doc(db, 'settings', `accounts_${user.uid}`), initialSettings);
       
-      // Initialize other collections
-      await setDoc(doc(db, 'statistics', 'current'), {
+      // Initialize user-specific statistics
+      await setDoc(doc(db, 'statistics', `current_${user.uid}`), {
         totalScanned: 0,
         aiApproved: 0,
         posted: 0,
         rejected: 0,
         lastScan: null,
-        lastUpdate: new Date()
+        lastUpdate: new Date(),
+        userId: user.uid
+      });
+
+      // Initialize user-specific AI settings
+      await setDoc(doc(db, 'settings', `ai_${user.uid}`), {
+        keywords: ['stocks', 'jumpy sales', 'rebots'],
+        customText: '🚀 Check this out:',
+        enableSentiment: false,
+        requireApproval: true,
+        userId: user.uid,
+        createdAt: new Date()
+      });
+
+      // Initialize user-specific news settings
+      await setDoc(doc(db, 'settings', `news_${user.uid}`), {
+        sources: ['https://www.bbcedge.org/us/en/', 'https://www.reuters.com/business/'],
+        scanFrequency: 300,
+        userId: user.uid,
+        createdAt: new Date()
       });
       
-      setSaveStatus('✅ Firestore initialized with all collections!');
+      setSaveStatus(`✅ Firestore initialized for: ${user.email}`); // Changed this line
+      
+      // Reload the settings
+      setTimeout(() => {
+        loadAccountSettings();
+      }, 1000);
+      
     } catch (error) {
       console.error('❌ Error initializing Firestore:', error);
       setSaveStatus('❌ Initialization failed: ' + error.message);
+    }
+  };
+
+  const testFirebaseConnection = async () => {
+    try {
+      if (!db) {
+        setSaveStatus('❌ Firebase not initialized');
+        return;
+      }
+
+      if (!user) {
+        setSaveStatus('❌ Please sign in to test connection');
+        return;
+      }
+      
+      // Test by trying to read a document
+      const testDoc = doc(db, 'settings', `test_${user.uid}`);
+      await setDoc(testDoc, { test: true, timestamp: new Date() });
+      await getDoc(testDoc);
+      setSaveStatus(`✅ Firebase connection successful for: ${user.email}`); // Changed this line
+    } catch (error) {
+      setSaveStatus('❌ Firebase connection failed: ' + error.message);
     }
   };
 
@@ -150,6 +224,12 @@ const AccountSettings = () => {
         </div>
       )}
 
+      {!user && (
+        <div className="status-message info">
+          🔐 Please sign in to access and save account settings.
+        </div>
+      )}
+
       <div className="grid grid-2">
         <div className="form-group">
           <label className="form-label">Source Account (Account A) *</label>
@@ -160,6 +240,7 @@ const AccountSettings = () => {
             value={accounts.source}
             onChange={(e) => handleInputChange('source', e.target.value)}
             required
+            disabled={!user}
           />
         </div>
 
@@ -172,6 +253,7 @@ const AccountSettings = () => {
             value={accounts.target}
             onChange={(e) => handleInputChange('target', e.target.value)}
             required
+            disabled={!user}
           />
         </div>
       </div>
@@ -185,6 +267,7 @@ const AccountSettings = () => {
             placeholder="Enter consumer key"
             value={accounts.consumerKey}
             onChange={(e) => handleInputChange('consumerKey', e.target.value)}
+            disabled={!user}
           />
         </div>
 
@@ -196,6 +279,7 @@ const AccountSettings = () => {
             placeholder="Enter consumer secret"
             value={accounts.consumerSecret}
             onChange={(e) => handleInputChange('consumerSecret', e.target.value)}
+            disabled={!user}
           />
         </div>
       </div>
@@ -209,6 +293,7 @@ const AccountSettings = () => {
             placeholder="Enter access token"
             value={accounts.accessToken}
             onChange={(e) => handleInputChange('accessToken', e.target.value)}
+            disabled={!user}
           />
         </div>
 
@@ -220,6 +305,7 @@ const AccountSettings = () => {
             placeholder="Enter access token secret"
             value={accounts.accessTokenSecret}
             onChange={(e) => handleInputChange('accessTokenSecret', e.target.value)}
+            disabled={!user}
           />
         </div>
       </div>
@@ -228,27 +314,47 @@ const AccountSettings = () => {
         <button 
           className="btn btn-primary" 
           onClick={saveAccountSettings}
-          disabled={loading}
+          disabled={loading || !user}
         >
           {loading ? <div className="spinner"></div> : '💾'}
           Save Account Settings
         </button>
         
-        <button className="btn btn-secondary" onClick={initializeFirestore}>
+        <button 
+          className="btn btn-secondary" 
+          onClick={initializeFirestore}
+          disabled={!user}
+        >
           🚀 Initialize Firestore
         </button>
         
-        <button className="btn btn-secondary" onClick={loadAccountSettings}>
+        <button 
+          className="btn btn-secondary" 
+          onClick={loadAccountSettings}
+          disabled={!user}
+        >
           🔄 Load Settings
+        </button>
+        
+        <button 
+          className="btn btn-secondary" 
+          onClick={testFirebaseConnection}
+          disabled={!user}
+        >
+          🔍 Test Connection
         </button>
       </div>
 
-      <div style={{ marginTop: '1rem', padding: '1rem', background: '#f7fafc', borderRadius: '8px' }}>
-        <h4>Firestore Status:</h4>
-        <p><strong>Collection:</strong> settings</p>
-        <p><strong>Document:</strong> accounts</p>
-        <p><strong>Auto-creation:</strong> Will be created on first save</p>
-      </div>
+      {user && (
+        <div style={{ marginTop: '1rem', padding: '1rem', background: '#4e4e4eff', borderRadius: '8px' }}>
+          <h4>Firestore Status:</h4>
+          <p><strong>User ID:</strong> {user.uid}</p>
+          <p><strong>User Email:</strong> {user.email}</p>
+          <p><strong>Collection:</strong> settings</p>
+          <p><strong>Document:</strong> accounts_{user.uid}</p>
+          <p><strong>Auto-creation:</strong> Will be created on first save</p>
+        </div>
+      )}
     </div>
   );
 };

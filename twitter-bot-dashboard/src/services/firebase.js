@@ -1,9 +1,8 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth'; // Add GoogleAuthProvider
 import { getFunctions } from 'firebase/functions';
 
-// Debug: Check environment variables
 console.log('🔧 Firebase Config Check:');
 console.log('API Key:', import.meta.env.VITE_FIREBASE_API_KEY ? '✅ Loaded' : '❌ Missing');
 console.log('Project ID:', import.meta.env.VITE_FIREBASE_PROJECT_ID ? '✅ Loaded' : '❌ Missing');
@@ -17,24 +16,35 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// Initialize variables
+let app;
+let db;
+let auth;
+let functions;
+let googleProvider; // Add Google provider
+
 try {
   // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
+  app = initializeApp(firebaseConfig);
   
   // Initialize services
-  export const db = getFirestore(app);
-  export const auth = getAuth(app);
-  export const functions = getFunctions(app);
+  db = getFirestore(app);
+  auth = getAuth(app);
+  functions = getFunctions(app);
+  googleProvider = new GoogleAuthProvider(); // Initialize Google provider
   
   console.log('✅ Firebase initialized successfully');
-  console.log('📊 Firestore:', db);
   
 } catch (error) {
   console.error('❌ Firebase initialization error:', error);
-  // Fallback: Create mock services for development
-  export const db = null;
-  export const auth = null;
-  export const functions = null;
+  // Fallback
+  db = null;
+  auth = null;
+  functions = null;
+  app = null;
+  googleProvider = null;
 }
 
+// Export everything
+export { db, auth, functions, googleProvider };
 export default app;
