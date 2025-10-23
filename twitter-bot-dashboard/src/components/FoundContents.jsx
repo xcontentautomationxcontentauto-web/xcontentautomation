@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../services/firebase';
-import { collection, onSnapshot, orderBy, query, where, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, orderBy, query, where, doc, updateDoc, deleteDoc, addDoc } from 'firebase/firestore';
 
 const FoundContents = ({ user }) => {
   const [contents, setContents] = useState([]);
@@ -36,7 +36,7 @@ const FoundContents = ({ user }) => {
           }));
           setContents(contentsData);
           setStatus(`👤 Loaded ${contentsData.length} items for: ${user.email}`);
-          
+
           // Clear status after 3 seconds
           setTimeout(() => {
             if (status.includes('👤 Loaded')) setStatus('');
@@ -52,6 +52,104 @@ const FoundContents = ({ user }) => {
     } catch (error) {
       console.error('Error setting up subscription:', error);
       setStatus('❌ Error: ' + error.message);
+    }
+  };
+
+  const addTestContent = async () => {
+    if (!db || !user) {
+      setStatus('❌ Please sign in to add test content');
+      return;
+    }
+
+    setLoading(true);
+    setStatus('Adding test content...');
+
+    try {
+      const testContents = [
+        {
+          content: '🚀 Breaking: Tech stocks surge as AI companies report record earnings and market optimism grows',
+          type: 'news',
+          source: 'https://www.reuters.com/business/',
+          status: 'pending',
+          userId: user.uid,
+          userEmail: user.email,
+          timestamp: new Date(),
+          aiAnalysis: {
+            sentiment: 'positive',
+            confidence: 0.92,
+            keywords: ['stocks', 'AI', 'earnings']
+          }
+        },
+        {
+          content: 'Just announced: Major partnership between leading tech giants to advance artificial intelligence research #AI #Tech',
+          type: 'tweet',
+          source: 'Account A',
+          status: 'pending',
+          userId: user.uid,
+          userEmail: user.email,
+          timestamp: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
+          aiAnalysis: {
+            sentiment: 'positive',
+            confidence: 0.88,
+            keywords: ['AI', 'tech', 'partnership']
+          }
+        },
+        {
+          content: 'Market update: Global markets show mixed results as investors await economic data. Trading volumes remain high.',
+          type: 'news',
+          source: 'https://www.cnbc.com/',
+          status: 'approved',
+          userId: user.uid,
+          userEmail: user.email,
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+          aiAnalysis: {
+            sentiment: 'neutral',
+            confidence: 0.85,
+            keywords: ['market', 'stocks', 'trading']
+          }
+        },
+        {
+          content: 'Exciting developments in renewable energy sector! Solar and wind companies reporting strong growth. #CleanEnergy #Stocks',
+          type: 'tweet',
+          source: 'Account A',
+          status: 'posted',
+          userId: user.uid,
+          userEmail: user.email,
+          timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
+          aiAnalysis: {
+            sentiment: 'positive',
+            confidence: 0.91,
+            keywords: ['renewable', 'energy', 'stocks']
+          }
+        },
+        {
+          content: 'Federal Reserve announces interest rate decision affecting global markets and investor sentiment worldwide',
+          type: 'news',
+          source: 'https://www.bbc.com/news',
+          status: 'pending',
+          userId: user.uid,
+          userEmail: user.email,
+          timestamp: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
+          aiAnalysis: {
+            sentiment: 'neutral',
+            confidence: 0.87,
+            keywords: ['federal', 'rate', 'markets']
+          }
+        }
+      ];
+
+      // Add test content to Firestore
+      for (const content of testContents) {
+        await addDoc(collection(db, 'foundContents'), content);
+      }
+
+      setStatus('✅ Test content added successfully! You can now manage it.');
+      setTimeout(() => setStatus(''), 5000);
+    } catch (error) {
+      console.error('Error adding test content:', error);
+      setStatus('❌ Error adding test content: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -139,7 +237,7 @@ const FoundContents = ({ user }) => {
       posted: { class: 'status-success', label: 'Posted', emoji: '🚀' },
       rejected: { class: 'status-inactive', label: 'Rejected', emoji: '❌' }
     };
-    
+
     const config = statusConfig[status] || statusConfig.pending;
     return (
       <span className={`status-badge ${config.class}`}>
@@ -178,7 +276,7 @@ const FoundContents = ({ user }) => {
           {contents.length} Item{contents.length !== 1 ? 's' : ''}
         </span>
       </div>
-      
+
       <p className="card-subtitle">
         Recently discovered tweets and news articles that match your criteria.
       </p>
@@ -216,6 +314,23 @@ const FoundContents = ({ user }) => {
         </select>
       </div>
 
+      {/* Add Test Content Button */}
+      {user && contents.length === 0 && (
+        <div className="form-group" style={{ textAlign: 'center', padding: '2rem' }}>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+            No content found yet. Add test data to see how the system works.
+          </p>
+          <button 
+            className="btn btn-primary"
+            onClick={addTestContent}
+            disabled={loading}
+          >
+            {loading ? <div className="spinner"></div> : '🧪'}
+            Add Test Content
+          </button>
+        </div>
+      )}
+
       {/* Quick Stats */}
       {user && contents.length > 0 && (
         <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
@@ -243,12 +358,13 @@ const FoundContents = ({ user }) => {
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
             Please sign in to view found contents.
           </div>
+        ) : filteredContents.length === 0 && contents.length > 0 ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+            No contents found matching the current filter.
+          </div>
         ) : filteredContents.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
-            {contents.length === 0 
-              ? 'No contents found yet. The system will automatically add content here when it finds matches.'
-              : 'No contents found matching the current filter.'
-            }
+            No contents found yet. The system will automatically add content here when it finds matches.
           </div>
         ) : (
           filteredContents.map((content) => (
@@ -266,7 +382,7 @@ const FoundContents = ({ user }) => {
                 </div>
                 {getStatusBadge(content.status)}
               </div>
-              
+
               <div className="content-text">
                 {content.content}
               </div>
@@ -295,7 +411,7 @@ const FoundContents = ({ user }) => {
                     ✅ Approve
                   </button>
                 )}
-                
+
                 {content.status === 'approved' && (
                   <button 
                     className="btn btn-primary"
@@ -305,7 +421,7 @@ const FoundContents = ({ user }) => {
                     🚀 Post Now
                   </button>
                 )}
-                
+
                 <button 
                   className="btn btn-secondary"
                   onClick={() => editContent(content.id, content.content)}
@@ -313,7 +429,7 @@ const FoundContents = ({ user }) => {
                 >
                   ✏️ Edit
                 </button>
-                
+
                 {content.status !== 'rejected' && (
                   <button 
                     className="btn btn-warning"
@@ -323,7 +439,7 @@ const FoundContents = ({ user }) => {
                     ❌ Reject
                   </button>
                 )}
-                
+
                 <button 
                   className="btn btn-danger"
                   onClick={() => deleteContent(content.id)}
@@ -338,7 +454,7 @@ const FoundContents = ({ user }) => {
       </div>
 
       {user && (
-        <div style={{ marginTop: '1rem', padding: '1rem', background: '#4e4e4eff', borderRadius: '8px' }}>
+        <div style={{ marginTop: '1rem', padding: '1rem', background: '#f7fafc', borderRadius: '8px' }}>
           <h4>Found Contents Status:</h4>
           <p><strong>User:</strong> {user.email}</p>
           <p><strong>Total Items:</strong> {contents.length}</p>
