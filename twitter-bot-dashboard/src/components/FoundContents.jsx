@@ -454,7 +454,7 @@ const FoundContents = ({ user }) => {
       </div>
 
       {user && (
-        <div style={{ marginTop: '1rem', padding: '1rem', background: '#f7fafc', borderRadius: '8px' }}>
+        <div style={{ marginTop: '1rem', padding: '1rem', background: '#4e4e4eff', borderRadius: '8px' }}>
           <h4>Found Contents Status:</h4>
           <p><strong>User:</strong> {user.email}</p>
           <p><strong>Total Items:</strong> {contents.length}</p>
