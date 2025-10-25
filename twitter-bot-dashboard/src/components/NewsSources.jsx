@@ -5,6 +5,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 const NewsSources = ({ user }) => {
   const [sources, setSources] = useState(['']);
   const [scanFrequency, setScanFrequency] = useState(300);
+  const [scanInterval, setScanInterval] = useState(10); // Default 10 minutes
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
 
@@ -33,10 +34,12 @@ const NewsSources = ({ user }) => {
         const data = docSnap.data();
         setSources(data.sources || ['']);
         setScanFrequency(data.scanFrequency || 300);
+        setScanInterval(data.scanInterval || 10); // Load saved interval
         setSaveStatus(`👤 Loaded news settings for: ${user.email}`);
       } else {
         setSources(['']);
         setScanFrequency(300);
+        setScanInterval(10); // Default interval
         setSaveStatus(`👤 Signed in as: ${user.email} - Configure and save news sources.`);
       }
     } catch (error) {
@@ -74,13 +77,14 @@ const NewsSources = ({ user }) => {
       await setDoc(doc(db, 'settings', `news_${user.uid}`), {
         sources: validSources,
         scanFrequency,
+        scanInterval: parseInt(scanInterval), // Save the interval
         userId: user.uid,
         userEmail: user.email,
         lastUpdated: new Date(),
         createdAt: new Date()
       });
       
-      setSaveStatus(`✅ News sources saved for: ${user.email}`);
+      setSaveStatus(`✅ News settings saved! Auto-scan: every ${scanInterval} minutes`);
       
       // Clear status after 3 seconds
       setTimeout(() => setSaveStatus(''), 3000);
@@ -132,7 +136,7 @@ const NewsSources = ({ user }) => {
 
     setSaveStatus(`🔍 Testing connection to: ${url}`);
     
-    // Simulate connection test (in real app, you'd make an actual HTTP request)
+    // Simulate connection test
     setTimeout(() => {
       setSaveStatus(`✅ Successfully connected to: ${url}`);
       setTimeout(() => setSaveStatus(''), 3000);
@@ -146,18 +150,30 @@ const NewsSources = ({ user }) => {
       'https://www.cnbc.com/world/?region=world'
     ]);
     setScanFrequency(300);
+    setScanInterval(10);
     setSaveStatus('🔄 Reset to default news sources');
   };
+
+  // Interval options for user selection
+  const intervalOptions = [
+    { value: 1, label: '1 minute', description: 'Most frequent - may impact performance' },
+    { value: 5, label: '5 minutes', description: 'Very frequent' },
+    { value: 10, label: '10 minutes', description: 'Recommended - balances speed and performance' },
+    { value: 15, label: '15 minutes', description: 'Moderate frequency' },
+    { value: 30, label: '30 minutes', description: 'Less frequent' },
+    { value: 60, label: '1 hour', description: 'Infrequent' },
+    { value: 120, label: '2 hours', description: 'Least frequent' }
+  ];
 
   return (
     <div className="card">
       <div className="card-header">
-        <h2 className="card-title">News Sources</h2>
-        <span className="status-badge status-active">Monitoring</span>
+        <h2 className="card-title">News Sources & Auto-Scan</h2>
+        <span className="status-badge status-active">Active</span>
       </div>
       
       <p className="card-subtitle">
-        Add news websites to monitor. Published articles will be analyzed and shared if they match your keywords.
+        Configure news sources and automatic scanning frequency.
       </p>
 
       {/* Status Message */}
@@ -177,10 +193,33 @@ const NewsSources = ({ user }) => {
         </div>
       )}
 
+      {/* Auto-Scan Interval Settings */}
+      <div className="form-group">
+        <label className="form-label">Auto-Scan Frequency</label>
+        <select 
+          className="form-select"
+          value={scanInterval}
+          onChange={(e) => setScanInterval(parseInt(e.target.value))}
+          disabled={!user}
+        >
+          {intervalOptions.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <small style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', display: 'block' }}>
+          {intervalOptions.find(opt => opt.value === scanInterval)?.description}
+        </small>
+        <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#666' }}>
+          <strong>Next scan:</strong> Approximately {scanInterval} minutes from last scan
+        </div>
+      </div>
+
       <div className="form-group">
         <label className="form-label">News Websites</label>
         <small style={{ color: 'var(--text-secondary)', marginBottom: '1rem', display: 'block' }}>
-          Add RSS feeds or news website URLs. The system will monitor these for new content.
+          Add RSS feeds or news website URLs. The system will automatically monitor these for new content.
         </small>
         
         {sources.map((source, index) => (
@@ -245,28 +284,19 @@ const NewsSources = ({ user }) => {
       </div>
 
       <div className="form-group">
-        <label className="form-label">Scan Frequency</label>
+        <label className="form-label">Content Scan Depth</label>
         <select 
           className="form-select"
           value={scanFrequency}
           onChange={(e) => setScanFrequency(Number(e.target.value))}
           disabled={!user}
         >
-          <option value={60}>Every minute</option>
-          <option value={300}>Every 5 minutes</option>
-          <option value={600}>Every 10 minutes</option>
-          <option value={1800}>Every 30 minutes</option>
-          <option value={3600}>Every hour</option>
-          <option value={7200}>Every 2 hours</option>
-          <option value={14400}>Every 4 hours</option>
+          <option value={60}>Quick Scan (fewer articles, faster)</option>
+          <option value={300}>Standard Scan (balanced)</option>
+          <option value={600}>Deep Scan (more articles, slower)</option>
         </select>
         <small style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', display: 'block' }}>
-          Current: {scanFrequency} seconds ({Math.round(scanFrequency / 60)} minutes)
-          {scanFrequency < 300 && (
-            <span style={{ color: 'var(--warning-color)', fontWeight: 'bold' }}>
-              {' '}⚠️ Frequent scanning may impact performance
-            </span>
-          )}
+          Controls how many articles are scanned from each source
         </small>
       </div>
 
@@ -277,7 +307,7 @@ const NewsSources = ({ user }) => {
           disabled={loading || !user}
         >
           {loading ? <div className="spinner"></div> : '💾'}
-          Save News Settings
+          Save Settings
         </button>
         
         <button 
@@ -291,12 +321,12 @@ const NewsSources = ({ user }) => {
 
       {user && (
         <div style={{ marginTop: '1rem', padding: '1rem', background: '#4e4e4eff', borderRadius: '8px' }}>
-          <h4>News Sources Status:</h4>
+          <h4>Auto-Scan Status:</h4>
           <p><strong>User:</strong> {user.email}</p>
           <p><strong>Sources Configured:</strong> {sources.filter(url => url.trim() !== '').length}</p>
-          <p><strong>Scan Frequency:</strong> Every {Math.round(scanFrequency / 60)} minutes</p>
-          <p><strong>Next Scan:</strong> Approximately {Math.round(scanFrequency / 60)} minutes from now</p>
-          {/* <p><strong>Collection:</strong> settings/news_{user.uid}</p> */}
+          <p><strong>Scan Frequency:</strong> Every {scanInterval} minutes</p>
+          <p><strong>Scan Depth:</strong> {scanFrequency === 60 ? 'Quick' : scanFrequency === 300 ? 'Standard' : 'Deep'}</p>
+          <p><strong>Next Scan:</strong> ~{scanInterval} minutes from last scan</p>
         </div>
       )}
     </div>

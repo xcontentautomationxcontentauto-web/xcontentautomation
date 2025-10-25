@@ -1405,3 +1405,228 @@ select:focus-visible {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
+
+
+/* Header Status */
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.scan-time {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--background-color);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Scanning Animation */
+.scanning-dots {
+  display: inline-block;
+  animation: scanning 1.5s infinite;
+}
+
+@keyframes scanning {
+  0%, 20% { opacity: 1; }
+  60% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+/* Setup Guide */
+.setup-guide {
+  background: var(--background-color);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.setup-guide h4 {
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+}
+
+.setup-guide ol {
+  margin-left: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.setup-guide li {
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+/* Status Message Improvements */
+.status-message.warning {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #d97706;
+}
+
+/* Content Controls Layout */
+.content-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .content-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .header-status {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+/* Header Status */
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.scan-time {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--background-color);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+/* Setup Guide */
+.setup-guide {
+  background: var(--background-color);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  border-left: 4px solid var(--primary-color);
+}
+
+.setup-guide h4 {
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.setup-guide ol {
+  margin-left: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.setup-guide li {
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+/* Content Controls without button */
+.content-controls {
+  margin-bottom: 1.5rem;
+}
+
+.filter-group {
+  max-width: 300px;
+}
+
+/* Enhanced Header Status */
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.scan-time {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--background-color);
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Interval Options Styling */
+.interval-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.interval-option {
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.interval-option:hover {
+  border-color: var(--primary-color);
+  background: rgba(29, 161, 242, 0.05);
+}
+
+.interval-option.selected {
+  border-color: var(--primary-color);
+  background: rgba(29, 161, 242, 0.1);
+}
+
+.interval-option h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+}
+
+.interval-option p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* Enhanced Setup Guide */
+.setup-guide {
+  background: var(--background-color);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  border-left: 4px solid var(--primary-color);
+}
+
+.setup-guide h4 {
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.setup-guide ol {
+  margin-left: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.setup-guide li {
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+/* Content Controls */
+.content-controls {
+  margin-bottom: 1.5rem;
+}
+
+.filter-group {
+  max-width: 300px;
+}
