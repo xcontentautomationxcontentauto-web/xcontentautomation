@@ -11,7 +11,10 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "firebase": "^10.5.0"
+    "firebase": "^10.5.0",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "twitter-api-v2": "^1.15.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.1.0",
