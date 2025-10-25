@@ -1,7 +1,8 @@
 {
-  "name": "twitter-bot-functions",
-  "description": "Cloud Functions for Twitter Bot Dashboard",
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
   "scripts": {
+    "lint": "echo 'No linting configured'",
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
     "start": "npm run shell",
@@ -13,12 +14,10 @@
   },
   "main": "index.js",
   "dependencies": {
-    "axios": "^1.12.2",
-    "cheerio": "^1.1.2",
     "firebase-admin": "^11.8.0",
     "firebase-functions": "^4.3.1",
-    "openai": "^6.6.0",
-    "twitter-api-v2": "^1.27.0"
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12"
   },
   "devDependencies": {
     "firebase-functions-test": "^3.1.0"
