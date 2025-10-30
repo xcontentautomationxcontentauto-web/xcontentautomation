@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../services/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { LanguageUtils } from '../utils/language';
 
-const AISettings = ({ user }) => {
+const AISettings = ({ user, language }) => {
   const [settings, setSettings] = useState({
-    keywords: ['stocks', 'jumpy sales', 'rebots'],
+    keywords: ['stocks', 'sales', 'market', 'news', 'technology', 'business'],
     customText: '🚀 Check this out:',
-    openaiApiKey: '',
     enableSentiment: false,
     requireApproval: true
   });
@@ -23,12 +23,12 @@ const AISettings = ({ user }) => {
   const loadAISettings = async () => {
     try {
       if (!db) {
-        setSaveStatus('❌ Firebase not initialized');
+        setSaveStatus(LanguageUtils.getText('❌ Firebase not initialized', language));
         return;
       }
 
       if (!user) {
-        setSaveStatus('⚠️ Please sign in to load settings');
+        setSaveStatus(LanguageUtils.getText('⚠️ Please sign in to load settings', language));
         return;
       }
 
@@ -37,29 +37,29 @@ const AISettings = ({ user }) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setSettings(data);
-        setSaveStatus(`👤 Loaded AI settings for: ${user.email}`);
+        setSaveStatus(LanguageUtils.getText('👤 Loaded AI settings for: ', language) + user.email);
       } else {
-        setSaveStatus(`👤 Signed in as: ${user.email} - Configure and save AI settings.`);
+        setSaveStatus(LanguageUtils.getText('👤 Signed in as: ', language) + user.email + LanguageUtils.getText(' - Configure and save AI settings.', language));
       }
     } catch (error) {
       console.error('Error loading AI settings:', error);
-      setSaveStatus('❌ Error loading AI settings: ' + error.message);
+      setSaveStatus(LanguageUtils.getText('❌ Error loading AI settings: ', language) + error.message);
     }
   };
 
   const saveAISettings = async () => {
     if (!db) {
-      setSaveStatus('❌ Firebase not connected');
+      setSaveStatus(LanguageUtils.getText('❌ Firebase not connected', language));
       return;
     }
 
     if (!user) {
-      setSaveStatus('❌ Please sign in to save settings');
+      setSaveStatus(LanguageUtils.getText('❌ Please sign in to save settings', language));
       return;
     }
 
     setLoading(true);
-    setSaveStatus('Saving AI settings...');
+    setSaveStatus(LanguageUtils.getText('Saving AI settings...', language));
     
     try {
       await setDoc(doc(db, 'settings', `ai_${user.uid}`), {
@@ -69,13 +69,13 @@ const AISettings = ({ user }) => {
         lastUpdated: new Date(),
         createdAt: settings.createdAt || new Date()
       });
-      setSaveStatus(`✅ AI settings saved for: ${user.email}`);
+      setSaveStatus(LanguageUtils.getText('✅ AI settings saved for: ', language) + user.email);
       
       // Clear status after 3 seconds
       setTimeout(() => setSaveStatus(''), 3000);
     } catch (error) {
       console.error('Error saving AI settings:', error);
-      setSaveStatus('❌ Error saving AI settings: ' + error.message);
+      setSaveStatus(LanguageUtils.getText('❌ Error saving AI settings: ', language) + error.message);
     } finally {
       setLoading(false);
     }
@@ -105,30 +105,37 @@ const AISettings = ({ user }) => {
     }));
   };
 
-  const testAIConnection = async () => {
-    if (!settings.openaiApiKey) {
-      setSaveStatus('❌ Please enter your OpenAI API key first');
-      return;
-    }
+  const addTurkishKeywords = () => {
+    const turkishKeywords = ['hisse', 'borsa', 'satış', 'piyasa', 'haber', 'teknoloji', 'iş'];
+    const newKeywords = [...new Set([...settings.keywords, ...turkishKeywords])];
+    setSettings(prev => ({
+      ...prev,
+      keywords: newKeywords
+    }));
+    setSaveStatus(LanguageUtils.getText('✅ Added Turkish keywords', language));
+    setTimeout(() => setSaveStatus(''), 3000);
+  };
 
-    setSaveStatus('Testing AI connection...');
-    
-    // Simulate AI connection test (you can replace this with actual OpenAI API call)
-    setTimeout(() => {
-      setSaveStatus('✅ AI connection test completed (simulated)');
-      setTimeout(() => setSaveStatus(''), 3000);
-    }, 1500);
+  const addEnglishKeywords = () => {
+    const englishKeywords = ['stocks', 'sales', 'market', 'news', 'technology', 'business', 'finance'];
+    const newKeywords = [...new Set([...settings.keywords, ...englishKeywords])];
+    setSettings(prev => ({
+      ...prev,
+      keywords: newKeywords
+    }));
+    setSaveStatus(LanguageUtils.getText('✅ Added English keywords', language));
+    setTimeout(() => setSaveStatus(''), 3000);
   };
 
   return (
     <div className="card">
       <div className="card-header">
-        <h2 className="card-title">Artificial Intelligence Settings</h2>
-        <span className="status-badge status-active">AI Active</span>
+        <h2 className="card-title">{LanguageUtils.getText('Artificial Intelligence Settings', language)}</h2>
+        <span className="status-badge status-active">{LanguageUtils.getText('AI Active', language)}</span>
       </div>
       
       <p className="card-subtitle">
-        Configure AI analysis for content filtering and enhancement.
+        {LanguageUtils.getText('Configure AI analysis for content filtering and enhancement. Uses free keyword-based analysis.', language)}
       </p>
 
       {/* Status Message */}
@@ -144,17 +151,36 @@ const AISettings = ({ user }) => {
 
       {!user && (
         <div className="status-message info">
-          🔐 Please sign in to access and save AI settings.
+          🔐 {LanguageUtils.getText('Please sign in to access and save AI settings.', language)}
         </div>
       )}
 
       <div className="form-group">
-        <label className="form-label">Keywords for Analysis</label>
+        <label className="form-label">{LanguageUtils.getText('Keywords for Analysis', language)}</label>
+        
+        {/* Quick Add Buttons */}
+        <div className="button-group" style={{ marginBottom: '1rem' }}>
+          <button 
+            className="btn btn-secondary btn-small"
+            onClick={addEnglishKeywords}
+            disabled={!user}
+          >
+            🇺🇸 {LanguageUtils.getText('Add English Keywords', language)}
+          </button>
+          <button 
+            className="btn btn-secondary btn-small"
+            onClick={addTurkishKeywords}
+            disabled={!user}
+          >
+            🇹🇷 {LanguageUtils.getText('Add Turkish Keywords', language)}
+          </button>
+        </div>
+
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
           <input
             type="text"
             className="form-input"
-            placeholder="Enter new keyword"
+            placeholder={LanguageUtils.getText('Enter new keyword', language)}
             value={newKeyword}
             onChange={(e) => setNewKeyword(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && addKeyword()}
@@ -165,7 +191,7 @@ const AISettings = ({ user }) => {
             onClick={addKeyword}
             disabled={!user}
           >
-            ➕ Add
+            ➕ {LanguageUtils.getText('Add', language)}
           </button>
         </div>
         
@@ -187,37 +213,22 @@ const AISettings = ({ user }) => {
           ))}
         </div>
         <small style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', display: 'block' }}>
-          Content containing these keywords will be automatically filtered and shared
+          {LanguageUtils.getText('Content containing these keywords will be automatically filtered and shared', language)}
         </small>
       </div>
 
       <div className="form-group">
-        <label className="form-label">Custom Text</label>
+        <label className="form-label">{LanguageUtils.getText('Custom Text', language)}</label>
         <input
           type="text"
           className="form-input"
-          placeholder="Text to add before shared content"
+          placeholder={LanguageUtils.getText('Text to add before shared content', language)}
           value={settings.customText}
           onChange={(e) => handleSettingChange('customText', e.target.value)}
           disabled={!user}
         />
         <small style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', display: 'block' }}>
-          This text will be prepended to all shared content
-        </small>
-      </div>
-
-      <div className="form-group">
-        <label className="form-label">OpenAI API Key</label>
-        <input
-          type="password"
-          className="form-input"
-          placeholder="sk-..."
-          value={settings.openaiApiKey}
-          onChange={(e) => handleSettingChange('openaiApiKey', e.target.value)}
-          disabled={!user}
-        />
-        <small style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', display: 'block' }}>
-          Required for AI content analysis and filtering. Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">OpenAI</a>
+          {LanguageUtils.getText('This text will be prepended to all shared content', language)}
         </small>
       </div>
 
@@ -231,10 +242,10 @@ const AISettings = ({ user }) => {
               disabled={!user}
             />
             <span className="toggle-slider"></span>
-            <span>Enable Sentiment Analysis</span>
+            <span>{LanguageUtils.getText('Enable Sentiment Analysis', language)}</span>
           </label>
           <small style={{ color: 'var(--text-secondary)', display: 'block', marginLeft: '60px' }}>
-            Analyze emotional tone of content before sharing
+            {LanguageUtils.getText('Analyze emotional tone of content before sharing', language)}
           </small>
         </div>
 
@@ -247,10 +258,10 @@ const AISettings = ({ user }) => {
               disabled={!user}
             />
             <span className="toggle-slider"></span>
-            <span>Require Approval Before Sharing</span>
+            <span>{LanguageUtils.getText('Require Approval Before Sharing', language)}</span>
           </label>
           <small style={{ color: 'var(--text-secondary)', display: 'block', marginLeft: '60px' }}>
-            Manual approval required before content is posted
+            {LanguageUtils.getText('Manual approval required before content is posted', language)}
           </small>
         </div>
       </div>
@@ -262,15 +273,7 @@ const AISettings = ({ user }) => {
           disabled={loading || !user}
         >
           {loading ? <div className="spinner"></div> : '💾'}
-          Save AI Settings
-        </button>
-        
-        <button 
-          className="btn btn-secondary" 
-          onClick={testAIConnection}
-          disabled={!user}
-        >
-          🤖 Test AI Connection
+          {LanguageUtils.getText('Save AI Settings', language)}
         </button>
         
         <button 
@@ -278,19 +281,18 @@ const AISettings = ({ user }) => {
           onClick={loadAISettings}
           disabled={!user}
         >
-          🔄 Load Settings
+          🔄 {LanguageUtils.getText('Load Settings', language)}
         </button>
       </div>
 
       {user && (
         <div style={{ marginTop: '1rem', padding: '1rem', background: '#4e4e4eff', borderRadius: '8px' }}>
-          <h4>AI Settings Status:</h4>
-          <p><strong>User:</strong> {user.email}</p>
-          <p><strong>Collection:</strong> settings</p>
-          {/* <p><strong>Document:</strong> ai_{user.uid}</p> */}
-          <p><strong>Keywords:</strong> {settings.keywords.length} configured</p>
-          <p><strong>Sentiment Analysis:</strong> {settings.enableSentiment ? 'Enabled' : 'Disabled'}</p>
-          <p><strong>Auto-approval:</strong> {settings.requireApproval ? 'Disabled' : 'Enabled'}</p>
+          <h4>{LanguageUtils.getText('AI Settings Status:', language)}</h4>
+          <p><strong>{LanguageUtils.getText('User:', language)}</strong> {user.email}</p>
+          <p><strong>{LanguageUtils.getText('Keywords:', language)}</strong> {settings.keywords.length} {LanguageUtils.getText('configured', language)}</p>
+          <p><strong>{LanguageUtils.getText('Sentiment Analysis:', language)}</strong> {settings.enableSentiment ? LanguageUtils.getText('Enabled', language) : LanguageUtils.getText('Disabled', language)}</p>
+          <p><strong>{LanguageUtils.getText('Auto-approval:', language)}</strong> {settings.requireApproval ? LanguageUtils.getText('Disabled', language) : LanguageUtils.getText('Enabled', language)}</p>
+          <p><strong>{LanguageUtils.getText('Analysis Method:', language)}</strong> {LanguageUtils.getText('Free Keyword Matching', language)}</p>
         </div>
       )}
     </div>

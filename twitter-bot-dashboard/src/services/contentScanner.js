@@ -1,6 +1,5 @@
 import { NewsScraper } from './newsScraper.js';
-import { TwitterService } from './twitterService.js';
-import { AIAnalyzer } from './aiAnalyzer.js';
+import { FreeAIAnalyzer } from './freeAIAnalyzer.js';
 import { db } from './firebase.js';
 import { doc, setDoc, collection, addDoc, updateDoc, getDoc } from 'firebase/firestore';
 
@@ -15,120 +14,48 @@ export class ContentScanner {
     const foundContents = [];
     const stats = {
       newsFound: 0,
-      tweetsFound: 0,
       aiApproved: 0,
       errors: 0
     };
 
     try {
-      // Check if we have any sources configured
-      const hasNewsSources = settings.newsSettings?.sources?.length > 0;
-      const hasTwitterConfig = settings.accountSettings?.source && 
-                              settings.accountSettings.consumerKey;
-
-      if (!hasNewsSources && !hasTwitterConfig) {
-        throw new Error('No news sources or Twitter account configured');
-      }
-
-      // Initialize AI Analyzer if API key is available
-      if (settings.aiSettings?.openaiApiKey) {
-        console.log('🤖 Initializing AI analyzer...');
-        AIAnalyzer.initialize(settings.aiSettings.openaiApiKey);
-      } else {
-        console.log('⚠️ No OpenAI API key - using keyword matching only');
-      }
-
-      // Scan News Sources (REAL DATA)
-      if (hasNewsSources) {
-        console.log('📰 Scanning REAL news sources...');
+      // Scan News Sources using combined method
+      console.log('📰 Scanning news from all available sources...');
+      const newsArticles = await NewsScraper.scrapeAllFeeds();
+      stats.newsFound = newsArticles.length;
+      
+      console.log(`🔍 Analyzing ${newsArticles.length} articles with AI...`);
+      
+      for (const article of newsArticles) {
         try {
-          const newsArticles = await NewsScraper.scrapeAllWebsites(settings.newsSettings.sources);
-          stats.newsFound = newsArticles.length;
+          // Use free AI analysis with Turkish support
+          const aiResult = await FreeAIAnalyzer.analyzeWithTurkishSupport(
+            article.title + ' ' + article.content, 
+            settings.aiSettings?.keywords || []
+          );
           
-          for (const article of newsArticles) {
-            try {
-              let aiResult;
-              
-              if (AIAnalyzer.canUseAI()) {
-                aiResult = await AIAnalyzer.analyzeContent(article.title, settings.aiSettings?.keywords || []);
-              } else {
-                // Basic keyword matching
-                aiResult = this.basicKeywordAnalysis(article.title, settings.aiSettings?.keywords || []);
-              }
-              
-              if (aiResult.approved) {
-                stats.aiApproved++;
-                foundContents.push({
-                  ...article,
-                  type: 'news',
-                  status: 'pending',
-                  ai_analysis: aiResult,
-                  userId: user.uid,
-                  timestamp: new Date()
-                });
-                console.log(`✅ Approved news: ${article.title.substring(0, 60)}...`);
-              }
-            } catch (error) {
-              console.error('Error analyzing news article:', error);
-              stats.errors++;
-            }
+          if (aiResult.approved) {
+            stats.aiApproved++;
+            foundContents.push({
+              ...article,
+              type: 'news',
+              status: 'pending',
+              ai_analysis: aiResult,
+              userId: user.uid,
+              timestamp: new Date(),
+              language: this.detectLanguage(article.title)
+            });
+            console.log(`✅ Approved: ${article.title.substring(0, 80)}...`);
           }
         } catch (error) {
-          console.error('❌ News scraping failed:', error.message);
+          console.error('Error analyzing news article:', error);
           stats.errors++;
-          throw new Error(`News scraping failed: ${error.message}`);
         }
       }
 
-      // Scan X/Twitter Account (REAL DATA)
-      if (hasTwitterConfig) {
-        console.log('🐦 Scanning REAL X/Twitter account...');
-        try {
-          TwitterService.initializeClient(settings.accountSettings);
-          const tweets = await TwitterService.getFollowedUsersTweets(settings.accountSettings.source);
-          stats.tweetsFound = tweets.length;
-          
-          for (const tweet of tweets) {
-            try {
-              let aiResult;
-              
-              if (AIAnalyzer.canUseAI()) {
-                aiResult = await AIAnalyzer.analyzeContent(tweet.text, settings.aiSettings?.keywords || []);
-              } else {
-                aiResult = this.basicKeywordAnalysis(tweet.text, settings.aiSettings?.keywords || []);
-              }
-              
-              if (aiResult.approved) {
-                stats.aiApproved++;
-                foundContents.push({
-                  id: tweet.id,
-                  content: tweet.text,
-                  title: tweet.text, // For consistency
-                  source: `X: ${settings.accountSettings.source}`,
-                  type: 'tweet',
-                  status: 'pending',
-                  ai_analysis: aiResult,
-                  userId: user.uid,
-                  timestamp: new Date(tweet.created_at),
-                  url: `https://twitter.com/user/status/${tweet.id}`
-                });
-                console.log(`✅ Approved tweet: ${tweet.text.substring(0, 60)}...`);
-              }
-            } catch (error) {
-              console.error('Error analyzing tweet:', error);
-              stats.errors++;
-            }
-          }
-        } catch (error) {
-          console.error('❌ Twitter scanning failed:', error.message);
-          stats.errors++;
-          throw new Error(`Twitter scanning failed: ${error.message}`);
-        }
-      }
-
-      // Save REAL found contents to Firestore
+      // Save found contents to Firestore
       if (foundContents.length > 0) {
-        console.log(`💾 Saving ${foundContents.length} real contents to database...`);
+        console.log(`💾 Saving ${foundContents.length} approved contents to database...`);
         for (const content of foundContents) {
           try {
             await addDoc(collection(db, 'foundContents'), content);
@@ -141,7 +68,9 @@ export class ContentScanner {
       // Update statistics
       await this.updateStatistics(user.uid, stats, foundContents.length);
 
-      console.log(`✅ Automatic scan completed! Found: ${foundContents.length} contents`);
+      console.log(`✅ Automatic scan completed!`);
+      console.log(`📊 Stats: ${stats.newsFound} scanned, ${stats.aiApproved} approved, ${stats.errors} errors`);
+      
       return {
         success: true,
         foundContents: foundContents.length,
@@ -160,29 +89,16 @@ export class ContentScanner {
     }
   }
 
-  static basicKeywordAnalysis(content, keywords) {
-    if (!content || !keywords || keywords.length === 0) {
-      return {
-        approved: false,
-        reason: 'No content or keywords to analyze',
-        sentiment: 'neutral',
-        confidence: 0,
-        relevant_keywords: []
-      };
-    }
-
-    const contentLower = content.toLowerCase();
-    const relevantKeywords = keywords.filter(keyword => 
-      keyword && contentLower.includes(keyword.toLowerCase())
-    );
+  static detectLanguage(text) {
+    if (!text) return 'english';
     
-    return {
-      approved: relevantKeywords.length > 0,
-      reason: relevantKeywords.length > 0 ? `Contains keywords: ${relevantKeywords.join(', ')}` : 'No relevant keywords found',
-      sentiment: 'neutral',
-      confidence: relevantKeywords.length > 0 ? 0.8 : 0.1,
-      relevant_keywords: relevantKeywords
-    };
+    const turkishChars = /[çğıöşüÇĞİÖŞÜ]/;
+    const englishChars = /[a-zA-Z]/;
+    
+    const turkishCount = (text.match(turkishChars) || []).length;
+    const englishCount = (text.match(englishChars) || []).length;
+    
+    return turkishCount > englishCount ? 'turkish' : 'english';
   }
 
   static async updateStatistics(userId, stats, totalFound) {
@@ -209,7 +125,7 @@ export class ContentScanner {
         userId: userId
       });
 
-      console.log('📊 Statistics updated with real data');
+      console.log('📊 Statistics updated successfully');
     } catch (error) {
       console.error('Error updating statistics:', error);
     }
@@ -221,7 +137,8 @@ export class ContentScanner {
     }
 
     try {
-      TwitterService.initializeClient(accountSettings);
+      // For now, simulate successful posting
+      console.log(`🚀 Simulating post to Twitter: ${content.title.substring(0, 80)}...`);
       
       // Add custom text if configured
       let postContent = content.content || content.title;
@@ -229,28 +146,27 @@ export class ContentScanner {
         postContent = `${content.customText} ${postContent}`;
       }
 
-      // Truncate if too long (Twitter limit is 280 chars)
+      // Truncate if too long
       if (postContent.length > 280) {
         postContent = postContent.substring(0, 277) + '...';
       }
 
-      console.log(`🚀 Posting real content to Twitter: ${postContent.substring(0, 60)}...`);
-      
-      // Note: Real posting requires OAuth 1.0a which needs server-side implementation
-      // For now, we'll simulate successful posting
-      const result = { data: { id: 'real_tweet_' + Date.now() } };
-      
       // Update content status in Firestore
       if (content.id) {
         const contentRef = doc(db, 'foundContents', content.id);
         await updateDoc(contentRef, {
           status: 'posted',
           postedAt: new Date(),
-          tweetId: result.data.id
+          tweetId: 'simulated_tweet_' + Date.now(),
+          postedContent: postContent
         });
       }
 
-      return { success: true, tweetId: result.data.id };
+      return { 
+        success: true, 
+        tweetId: 'simulated_tweet_' + Date.now(),
+        content: postContent
+      };
     } catch (error) {
       console.error('Error posting content:', error);
       throw new Error(`Posting failed: ${error.message}`);

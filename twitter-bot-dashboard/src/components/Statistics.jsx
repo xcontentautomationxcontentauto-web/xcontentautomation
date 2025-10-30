@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../services/firebase';
 import { doc, onSnapshot, updateDoc, getDoc } from 'firebase/firestore';
+import { LanguageUtils } from '../utils/language';
 
-const Statistics = ({ user }) => {
+const Statistics = ({ user, language }) => {
   const [stats, setStats] = useState({
     totalScanned: 0,
     aiApproved: 0,
@@ -22,7 +23,7 @@ const Statistics = ({ user }) => {
     if (user) {
       subscribeToStatistics();
     } else {
-      setStatus('⚠️ Please sign in to view statistics');
+      setStatus(LanguageUtils.getText('⚠️ Please sign in to view statistics', language));
     }
   }, [user]);
 
@@ -47,27 +48,25 @@ const Statistics = ({ user }) => {
               systemUptime: data.systemUptime || '0 days, 0 hours',
               nextScan: data.nextScan || null
             });
-            setStatus(`📊 Live statistics for: ${user.email}`);
+            setStatus(LanguageUtils.getText('📊 Live statistics for: ', language) + user.email);
             
-            // Clear status after 3 seconds
             setTimeout(() => {
               if (status.includes('📊 Live statistics')) setStatus('');
             }, 3000);
           } else {
-            // Initialize statistics if they don't exist
             initializeStatistics();
           }
         },
         (error) => {
           console.error('Error subscribing to statistics:', error);
-          setStatus('❌ Error loading statistics: ' + error.message);
+          setStatus(LanguageUtils.getText('❌ Error loading statistics: ', language) + error.message);
         }
       );
 
       return () => unsubscribe();
     } catch (error) {
       console.error('Error setting up statistics subscription:', error);
-      setStatus('❌ Error: ' + error.message);
+      setStatus(LanguageUtils.getText('❌ Error: ', language) + error.message);
     }
   };
 
@@ -84,7 +83,7 @@ const Statistics = ({ user }) => {
         lastTweet: null,
         lastNews: null,
         systemUptime: '0 days, 0 hours',
-        nextScan: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes from now
+        nextScan: new Date(Date.now() + 5 * 60 * 1000),
         userId: user.uid,
         userEmail: user.email,
         createdAt: new Date(),
@@ -97,12 +96,12 @@ const Statistics = ({ user }) => {
 
   const refreshStatistics = async () => {
     if (!db || !user) {
-      setStatus('❌ Please sign in to refresh statistics');
+      setStatus(LanguageUtils.getText('❌ Please sign in to refresh statistics', language));
       return;
     }
 
     setLoading(true);
-    setStatus('🔄 Refreshing statistics...');
+    setStatus(LanguageUtils.getText('🔄 Refreshing statistics...', language));
     
     try {
       const docRef = doc(db, 'statistics', `current_${user.uid}`);
@@ -124,12 +123,12 @@ const Statistics = ({ user }) => {
       }
       
       setLastRefresh(new Date());
-      setStatus('✅ Statistics refreshed successfully');
+      setStatus(LanguageUtils.getText('✅ Statistics refreshed successfully', language));
       
       setTimeout(() => setStatus(''), 3000);
     } catch (error) {
       console.error('Error refreshing statistics:', error);
-      setStatus('❌ Error refreshing statistics: ' + error.message);
+      setStatus(LanguageUtils.getText('❌ Error refreshing statistics: ', language) + error.message);
     } finally {
       setLoading(false);
     }
@@ -137,14 +136,13 @@ const Statistics = ({ user }) => {
 
   const generateReport = async () => {
     if (!user) {
-      setStatus('❌ Please sign in to generate reports');
+      setStatus(LanguageUtils.getText('❌ Please sign in to generate reports', language));
       return;
     }
 
     setLoading(true);
-    setStatus('📈 Generating detailed report...');
+    setStatus(LanguageUtils.getText('📈 Generating detailed report...', language));
     
-    // Simulate report generation
     setTimeout(() => {
       const reportData = {
         user: user.email,
@@ -153,10 +151,9 @@ const Statistics = ({ user }) => {
         summary: getPerformanceSummary()
       };
       
-      // In a real app, you would generate and download a PDF/CSV
       console.log('Generated Report:', reportData);
       
-      setStatus('✅ Report generated successfully (check console)');
+      setStatus(LanguageUtils.getText('✅ Report generated successfully (check console)', language));
       setLoading(false);
       
       setTimeout(() => setStatus(''), 3000);
@@ -165,16 +162,16 @@ const Statistics = ({ user }) => {
 
   const resetStatistics = async () => {
     if (!db || !user) {
-      setStatus('❌ Please sign in to reset statistics');
+      setStatus(LanguageUtils.getText('❌ Please sign in to reset statistics', language));
       return;
     }
 
-    if (!window.confirm('Are you sure you want to reset all statistics? This action cannot be undone.')) {
+    if (!window.confirm(LanguageUtils.getText('Are you sure you want to reset all statistics? This action cannot be undone.', language))) {
       return;
     }
 
     setLoading(true);
-    setStatus('🔄 Resetting statistics...');
+    setStatus(LanguageUtils.getText('🔄 Resetting statistics...', language));
     
     try {
       await updateDoc(doc(db, 'statistics', `current_${user.uid}`), {
@@ -191,28 +188,28 @@ const Statistics = ({ user }) => {
         resetAt: new Date()
       });
       
-      setStatus('✅ Statistics reset successfully');
+      setStatus(LanguageUtils.getText('✅ Statistics reset successfully', language));
       setTimeout(() => setStatus(''), 3000);
     } catch (error) {
       console.error('Error resetting statistics:', error);
-      setStatus('❌ Error resetting statistics: ' + error.message);
+      setStatus(LanguageUtils.getText('❌ Error resetting statistics: ', language) + error.message);
     } finally {
       setLoading(false);
     }
   };
 
   const formatDate = (timestamp) => {
-    if (!timestamp) return 'Never';
+    if (!timestamp) return LanguageUtils.getText('Never', language);
     try {
       const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
       return date.toLocaleString();
     } catch (error) {
-      return 'Invalid date';
+      return LanguageUtils.getText('Invalid date', language);
     }
   };
 
   const formatRelativeTime = (timestamp) => {
-    if (!timestamp) return 'Never';
+    if (!timestamp) return LanguageUtils.getText('Never', language);
     try {
       const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
       const now = new Date();
@@ -221,12 +218,12 @@ const Statistics = ({ user }) => {
       const diffHours = Math.floor(diffMs / 3600000);
       const diffDays = Math.floor(diffMs / 86400000);
 
-      if (diffMins < 1) return 'Just now';
-      if (diffMins < 60) return `${diffMins}m ago`;
-      if (diffHours < 24) return `${diffHours}h ago`;
-      return `${diffDays}d ago`;
+      if (diffMins < 1) return LanguageUtils.getText('Just now', language);
+      if (diffMins < 60) return `${diffMins}m ${LanguageUtils.getText('ago', language)}`;
+      if (diffHours < 24) return `${diffHours}h ${LanguageUtils.getText('ago', language)}`;
+      return `${diffDays}d ${LanguageUtils.getText('ago', language)}`;
     } catch (error) {
-      return 'Invalid date';
+      return LanguageUtils.getText('Invalid date', language);
     }
   };
 
@@ -255,8 +252,8 @@ const Statistics = ({ user }) => {
   return (
     <div className="card">
       <div className="card-header">
-        <h2 className="card-title">Statistics & Analytics</h2>
-        <span className="status-badge status-active">Live</span>
+        <h2 className="card-title">{LanguageUtils.getText('Statistics & Analytics', language)}</h2>
+        <span className="status-badge status-active">{LanguageUtils.getText('Live', language)}</span>
       </div>
 
       {/* Status Message */}
@@ -272,7 +269,7 @@ const Statistics = ({ user }) => {
 
       {!user && (
         <div className="status-message info">
-          🔐 Please sign in to view statistics and analytics.
+          🔐 {LanguageUtils.getText('Please sign in to view statistics and analytics.', language)}
         </div>
       )}
 
@@ -280,26 +277,26 @@ const Statistics = ({ user }) => {
       <div className="stats-grid">
         <div className="stat-card">
           <span className="stat-number">{stats.totalScanned.toLocaleString()}</span>
-          <span className="stat-label">Total Scanned</span>
-          <small>Content items processed</small>
+          <span className="stat-label">{LanguageUtils.getText('Total Scanned', language)}</span>
+          <small>{LanguageUtils.getText('Content items processed', language)}</small>
         </div>
         
         <div className="stat-card">
           <span className="stat-number">{stats.aiApproved.toLocaleString()}</span>
-          <span className="stat-label">AI Approved</span>
-          <small>Automatically approved</small>
+          <span className="stat-label">{LanguageUtils.getText('AI Approved', language)}</span>
+          <small>{LanguageUtils.getText('Automatically approved', language)}</small>
         </div>
         
         <div className="stat-card">
           <span className="stat-number">{stats.posted.toLocaleString()}</span>
-          <span className="stat-label">Posted</span>
-          <small>Successfully shared</small>
+          <span className="stat-label">{LanguageUtils.getText('Posted', language)}</span>
+          <small>{LanguageUtils.getText('Successfully shared', language)}</small>
         </div>
         
         <div className="stat-card">
           <span className="stat-number">{stats.rejected.toLocaleString()}</span>
-          <span className="stat-label">Rejected</span>
-          <small>Filtered out</small>
+          <span className="stat-label">{LanguageUtils.getText('Rejected', language)}</span>
+          <small>{LanguageUtils.getText('Filtered out', language)}</small>
         </div>
       </div>
 
@@ -313,28 +310,28 @@ const Statistics = ({ user }) => {
             >
               {performance.efficiency}%
             </span>
-            <span className="stat-label">Efficiency</span>
-            <small>Posted/Scanned ratio</small>
+            <span className="stat-label">{LanguageUtils.getText('Efficiency', language)}</span>
+            <small>{LanguageUtils.getText('Posted/Scanned ratio', language)}</small>
           </div>
           
           <div className="stat-card">
             <span className="stat-number">{performance.approvalRate}%</span>
-            <span className="stat-label">AI Approval Rate</span>
-            <small>Auto-approved content</small>
+            <span className="stat-label">{LanguageUtils.getText('AI Approval Rate', language)}</span>
+            <small>{LanguageUtils.getText('Auto-approved content', language)}</small>
           </div>
           
           <div className="stat-card">
             <span className="stat-number">{performance.rejectionRate}%</span>
-            <span className="stat-label">Rejection Rate</span>
-            <small>Filtered content</small>
+            <span className="stat-label">{LanguageUtils.getText('Rejection Rate', language)}</span>
+            <small>{LanguageUtils.getText('Filtered content', language)}</small>
           </div>
           
           <div className="stat-card">
             <span className="stat-number">
               {stats.totalScanned > 0 ? Math.round(stats.posted / (stats.totalScanned / 100)) : 0}%
             </span>
-            <span className="stat-label">Success Rate</span>
-            <small>Overall performance</small>
+            <span className="stat-label">{LanguageUtils.getText('Success Rate', language)}</span>
+            <small>{LanguageUtils.getText('Overall performance', language)}</small>
           </div>
         </div>
       )}
@@ -342,7 +339,7 @@ const Statistics = ({ user }) => {
       {/* System Information */}
       <div className="grid grid-2">
         <div className="form-group">
-          <label className="form-label">Last Content Scan</label>
+          <label className="form-label">{LanguageUtils.getText('Last Content Scan', language)}</label>
           <div className="stat-value">
             {formatDate(stats.lastScan)}
             <small>{formatRelativeTime(stats.lastScan)}</small>
@@ -350,7 +347,7 @@ const Statistics = ({ user }) => {
         </div>
 
         <div className="form-group">
-          <label className="form-label">Last Tweet Posted</label>
+          <label className="form-label">{LanguageUtils.getText('Last Tweet Posted', language)}</label>
           <div className="stat-value">
             {formatDate(stats.lastTweet)}
             <small>{formatRelativeTime(stats.lastTweet)}</small>
@@ -358,7 +355,7 @@ const Statistics = ({ user }) => {
         </div>
 
         <div className="form-group">
-          <label className="form-label">Last News Posted</label>
+          <label className="form-label">{LanguageUtils.getText('Last News Posted', language)}</label>
           <div className="stat-value">
             {formatDate(stats.lastNews)}
             <small>{formatRelativeTime(stats.lastNews)}</small>
@@ -366,23 +363,23 @@ const Statistics = ({ user }) => {
         </div>
 
         <div className="form-group">
-          <label className="form-label">Next Scheduled Scan</label>
+          <label className="form-label">{LanguageUtils.getText('Next Scheduled Scan', language)}</label>
           <div className="stat-value">
-            {stats.nextScan ? formatDate(stats.nextScan) : 'Not scheduled'}
+            {stats.nextScan ? formatDate(stats.nextScan) : LanguageUtils.getText('Not scheduled', language)}
             <small>{stats.nextScan && formatRelativeTime(stats.nextScan)}</small>
           </div>
         </div>
 
         <div className="form-group">
-          <label className="form-label">System Uptime</label>
+          <label className="form-label">{LanguageUtils.getText('System Uptime', language)}</label>
           <div className="stat-value">
             {stats.systemUptime}
-            <small>Continuous operation</small>
+            <small>{LanguageUtils.getText('Continuous operation', language)}</small>
           </div>
         </div>
 
         <div className="form-group">
-          <label className="form-label">Last Refresh</label>
+          <label className="form-label">{LanguageUtils.getText('Last Refresh', language)}</label>
           <div className="stat-value">
             {lastRefresh.toLocaleString()}
             <small>{formatRelativeTime(lastRefresh)}</small>
@@ -398,7 +395,7 @@ const Statistics = ({ user }) => {
           disabled={loading || !user}
         >
           {loading ? <div className="spinner"></div> : '🔄'}
-          Refresh Statistics
+          {LanguageUtils.getText('Refresh Statistics', language)}
         </button>
         
         <button 
@@ -406,7 +403,7 @@ const Statistics = ({ user }) => {
           onClick={generateReport}
           disabled={loading || !user}
         >
-          📊 Generate Report
+          📊 {LanguageUtils.getText('Generate Report', language)}
         </button>
         
         <button 
@@ -414,18 +411,17 @@ const Statistics = ({ user }) => {
           onClick={resetStatistics}
           disabled={loading || !user}
         >
-          🔄 Reset Stats
+          🔄 {LanguageUtils.getText('Reset Stats', language)}
         </button>
       </div>
 
       {user && (
         <div style={{ marginTop: '1rem', padding: '1rem', background: '#4e4e4eff', borderRadius: '8px' }}>
-          <h4>Statistics Overview:</h4>
-          <p><strong>User:</strong> {user.email}</p>
-          <p><strong>Data Scope:</strong> User-specific statistics</p>
-          {/* <p><strong>Collection:</strong> statistics/current_{user.uid}</p> */}
-          <p><strong>Real-time Updates:</strong> Enabled</p>
-          <p><strong>Total Operations:</strong> {stats.totalScanned + stats.posted + stats.rejected}</p>
+          <h4>{LanguageUtils.getText('Statistics Overview:', language)}</h4>
+          <p><strong>{LanguageUtils.getText('User:', language)}</strong> {user.email}</p>
+          <p><strong>{LanguageUtils.getText('Data Scope:', language)}</strong> {LanguageUtils.getText('User-specific statistics', language)}</p>
+          <p><strong>{LanguageUtils.getText('Real-time Updates:', language)}</strong> {LanguageUtils.getText('Enabled', language)}</p>
+          <p><strong>{LanguageUtils.getText('Total Operations:', language)}</strong> {stats.totalScanned + stats.posted + stats.rejected}</p>
         </div>
       )}
     </div>

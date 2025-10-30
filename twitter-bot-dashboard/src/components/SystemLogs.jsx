@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../services/firebase';
 import { collection, onSnapshot, orderBy, query, limit, where, writeBatch, doc } from 'firebase/firestore';
+import { LanguageUtils } from '../utils/language';
 
-const SystemLogs = ({ user }) => {
+const SystemLogs = ({ user, language }) => {
   const [logs, setLogs] = useState([]);
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(false);
@@ -14,7 +15,7 @@ const SystemLogs = ({ user }) => {
     if (user) {
       subscribeToSystemLogs();
     } else {
-      setStatus('⚠️ Please sign in to view system logs');
+      setStatus(LanguageUtils.getText('⚠️ Please sign in to view system logs', language));
     }
   }, [user, logLimit]);
 
@@ -36,34 +37,33 @@ const SystemLogs = ({ user }) => {
             ...doc.data()
           }));
           setLogs(logsData);
-          setStatus(`📋 Loaded ${logsData.length} logs for: ${user.email}`);
+          setStatus(LanguageUtils.getText('📋 Loaded ', language) + logsData.length + LanguageUtils.getText(' logs for: ', language) + user.email);
           
-          // Clear status after 3 seconds
           setTimeout(() => {
             if (status.includes('📋 Loaded')) setStatus('');
           }, 3000);
         },
         (error) => {
           console.error('Error subscribing to system logs:', error);
-          setStatus('❌ Error loading logs: ' + error.message);
+          setStatus(LanguageUtils.getText('❌ Error loading logs: ', language) + error.message);
         }
       );
 
       return () => unsubscribe();
     } catch (error) {
       console.error('Error setting up logs subscription:', error);
-      setStatus('❌ Error: ' + error.message);
+      setStatus(LanguageUtils.getText('❌ Error: ', language) + error.message);
     }
   };
 
   const exportLogs = async () => {
     if (!user) {
-      setStatus('❌ Please sign in to export logs');
+      setStatus(LanguageUtils.getText('❌ Please sign in to export logs', language));
       return;
     }
 
     setLoading(true);
-    setStatus('📥 Preparing log export...');
+    setStatus(LanguageUtils.getText('📥 Preparing log export...', language));
     
     try {
       const exportData = {
@@ -80,7 +80,6 @@ const SystemLogs = ({ user }) => {
         }))
       };
 
-      // Create and download JSON file
       const dataStr = JSON.stringify(exportData, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(dataBlob);
@@ -92,11 +91,11 @@ const SystemLogs = ({ user }) => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      setStatus('✅ Logs exported successfully');
+      setStatus(LanguageUtils.getText('✅ Logs exported successfully', language));
       setTimeout(() => setStatus(''), 3000);
     } catch (error) {
       console.error('Error exporting logs:', error);
-      setStatus('❌ Error exporting logs: ' + error.message);
+      setStatus(LanguageUtils.getText('❌ Error exporting logs: ', language) + error.message);
     } finally {
       setLoading(false);
     }
@@ -104,16 +103,16 @@ const SystemLogs = ({ user }) => {
 
   const clearOldLogs = async () => {
     if (!db || !user) {
-      setStatus('❌ Please sign in to clear logs');
+      setStatus(LanguageUtils.getText('❌ Please sign in to clear logs', language));
       return;
     }
 
-    if (!window.confirm('Are you sure you want to clear all logs? This action cannot be undone.')) {
+    if (!window.confirm(LanguageUtils.getText('Are you sure you want to clear all logs? This action cannot be undone.', language))) {
       return;
     }
 
     setLoading(true);
-    setStatus('🗑️ Clearing logs...');
+    setStatus(LanguageUtils.getText('🗑️ Clearing logs...', language));
     
     try {
       const batch = writeBatch(db);
@@ -123,11 +122,11 @@ const SystemLogs = ({ user }) => {
       });
       
       await batch.commit();
-      setStatus('✅ Logs cleared successfully');
+      setStatus(LanguageUtils.getText('✅ Logs cleared successfully', language));
       setTimeout(() => setStatus(''), 3000);
     } catch (error) {
       console.error('Error clearing logs:', error);
-      setStatus('❌ Error clearing logs: ' + error.message);
+      setStatus(LanguageUtils.getText('❌ Error clearing logs: ', language) + error.message);
     } finally {
       setLoading(false);
     }
@@ -135,16 +134,16 @@ const SystemLogs = ({ user }) => {
 
   const clearLogsOlderThan = async (days = 7) => {
     if (!db || !user) {
-      setStatus('❌ Please sign in to clear logs');
+      setStatus(LanguageUtils.getText('❌ Please sign in to clear logs', language));
       return;
     }
 
-    if (!window.confirm(`Are you sure you want to clear logs older than ${days} days?`)) {
+    if (!window.confirm(LanguageUtils.getText('Are you sure you want to clear logs older than ', language) + days + LanguageUtils.getText(' days?', language))) {
       return;
     }
 
     setLoading(true);
-    setStatus(`🗑️ Clearing logs older than ${days} days...`);
+    setStatus(LanguageUtils.getText('🗑️ Clearing logs older than ', language) + days + LanguageUtils.getText(' days...', language));
     
     try {
       const cutoffDate = new Date();
@@ -156,7 +155,7 @@ const SystemLogs = ({ user }) => {
       });
 
       if (oldLogs.length === 0) {
-        setStatus('ℹ️ No logs found older than the specified period');
+        setStatus(LanguageUtils.getText('ℹ️ No logs found older than the specified period', language));
         setLoading(false);
         return;
       }
@@ -168,11 +167,11 @@ const SystemLogs = ({ user }) => {
       });
       
       await batch.commit();
-      setStatus(`✅ Cleared ${oldLogs.length} logs older than ${days} days`);
+      setStatus(LanguageUtils.getText('✅ Cleared ', language) + oldLogs.length + LanguageUtils.getText(' logs older than ', language) + days + LanguageUtils.getText(' days', language));
       setTimeout(() => setStatus(''), 3000);
     } catch (error) {
       console.error('Error clearing old logs:', error);
-      setStatus('❌ Error clearing old logs: ' + error.message);
+      setStatus(LanguageUtils.getText('❌ Error clearing old logs: ', language) + error.message);
     } finally {
       setLoading(false);
     }
@@ -180,80 +179,14 @@ const SystemLogs = ({ user }) => {
 
   const refreshLogs = () => {
     if (!user) {
-      setStatus('❌ Please sign in to refresh logs');
+      setStatus(LanguageUtils.getText('❌ Please sign in to refresh logs', language));
       return;
     }
 
-    setStatus('🔄 Refreshing logs...');
+    setStatus(LanguageUtils.getText('🔄 Refreshing logs...', language));
     subscribeToSystemLogs();
-    setTimeout(() => setStatus('✅ Logs refreshed'), 1000);
+    setTimeout(() => setStatus(LanguageUtils.getText('✅ Logs refreshed', language)), 1000);
     setTimeout(() => setStatus(''), 3000);
-  };
-
-  const addTestLog = async () => {
-    if (!db || !user) {
-      setStatus('❌ Please sign in to add test logs');
-      return;
-    }
-
-    setLoading(true);
-    setStatus('🧪 Adding test logs...');
-    
-    try {
-      const testLogs = [
-        {
-          level: 'info',
-          message: 'Test info log added manually',
-          source: 'manual-test',
-          userId: user.uid,
-          userEmail: user.email,
-          timestamp: new Date(),
-          context: { test: true }
-        },
-        {
-          level: 'success',
-          message: 'Test success log for demonstration',
-          source: 'manual-test',
-          userId: user.uid,
-          userEmail: user.email,
-          timestamp: new Date(),
-          context: { test: true }
-        },
-        {
-          level: 'warning',
-          message: 'Test warning log to check formatting',
-          source: 'manual-test',
-          userId: user.uid,
-          userEmail: user.email,
-          timestamp: new Date(),
-          context: { test: true }
-        },
-        {
-          level: 'error',
-          message: 'Test error log for error handling display',
-          source: 'manual-test',
-          userId: user.uid,
-          userEmail: user.email,
-          timestamp: new Date(),
-          context: { test: true }
-        }
-      ];
-
-      const batch = writeBatch(db);
-      testLogs.forEach(log => {
-        const logRef = doc(collection(db, 'systemLogs'));
-        batch.set(logRef, log);
-      });
-      
-      await batch.commit();
-      setStatus('✅ Test logs added successfully');
-      setTimeout(() => setStatus(''), 3000);
-    } catch (error) {
-      console.error('Error adding test logs:', error);
-      setStatus('❌ Error adding test logs: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const filteredLogs = logs.filter(log => {
@@ -289,7 +222,7 @@ const SystemLogs = ({ user }) => {
       const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
       return date.toLocaleString();
     } catch (error) {
-      return 'Invalid date';
+      return LanguageUtils.getText('Invalid date', language);
     }
   };
 
@@ -303,10 +236,10 @@ const SystemLogs = ({ user }) => {
       const diffHours = Math.floor(diffMs / 3600000);
       const diffDays = Math.floor(diffMs / 86400000);
 
-      if (diffMins < 1) return 'Just now';
-      if (diffMins < 60) return `${diffMins}m ago`;
-      if (diffHours < 24) return `${diffHours}h ago`;
-      return `${diffDays}d ago`;
+      if (diffMins < 1) return LanguageUtils.getText('Just now', language);
+      if (diffMins < 60) return `${diffMins}m ${LanguageUtils.getText('ago', language)}`;
+      if (diffHours < 24) return `${diffHours}h ${LanguageUtils.getText('ago', language)}`;
+      return `${diffDays}d ${LanguageUtils.getText('ago', language)}`;
     } catch (error) {
       return '';
     }
@@ -329,9 +262,9 @@ const SystemLogs = ({ user }) => {
   return (
     <div className="card">
       <div className="card-header">
-        <h2 className="card-title">System Logs & Activity</h2>
+        <h2 className="card-title">{LanguageUtils.getText('System Logs & Activity', language)}</h2>
         <span className="status-badge status-active">
-          {logs.length} Entr{logs.length !== 1 ? 'ies' : 'y'}
+          {logs.length} {LanguageUtils.getText('Entr', language)}{logs.length !== 1 ? LanguageUtils.getText('ies', language) : LanguageUtils.getText('y', language)}
         </span>
       </div>
 
@@ -348,7 +281,7 @@ const SystemLogs = ({ user }) => {
 
       {!user && (
         <div className="status-message info">
-          🔐 Please sign in to view system logs and activity.
+          🔐 {LanguageUtils.getText('Please sign in to view system logs and activity.', language)}
         </div>
       )}
 
@@ -357,31 +290,31 @@ const SystemLogs = ({ user }) => {
         <div className="stats-grid" style={{ marginBottom: '1.5rem' }}>
           <div className="stat-card">
             <span className="stat-number">{logStats.total}</span>
-            <span className="stat-label">Total</span>
+            <span className="stat-label">{LanguageUtils.getText('Total', language)}</span>
           </div>
           <div className="stat-card">
             <span className="stat-number" style={{ color: 'var(--primary-color)' }}>
               {logStats.info}
             </span>
-            <span className="stat-label">Info</span>
+            <span className="stat-label">{LanguageUtils.getText('Info', language)}</span>
           </div>
           <div className="stat-card">
             <span className="stat-number" style={{ color: 'var(--success-color)' }}>
               {logStats.success}
             </span>
-            <span className="stat-label">Success</span>
+            <span className="stat-label">{LanguageUtils.getText('Success', language)}</span>
           </div>
           <div className="stat-card">
             <span className="stat-number" style={{ color: 'var(--warning-color)' }}>
               {logStats.warning}
             </span>
-            <span className="stat-label">Warning</span>
+            <span className="stat-label">{LanguageUtils.getText('Warning', language)}</span>
           </div>
           <div className="stat-card">
             <span className="stat-number" style={{ color: 'var(--error-color)' }}>
               {logStats.error}
             </span>
-            <span className="stat-label">Error</span>
+            <span className="stat-label">{LanguageUtils.getText('Error', language)}</span>
           </div>
         </div>
       )}
@@ -389,35 +322,35 @@ const SystemLogs = ({ user }) => {
       {/* Controls */}
       <div className="grid grid-2" style={{ marginBottom: '1.5rem' }}>
         <div className="form-group">
-          <label className="form-label">Filter by Level</label>
+          <label className="form-label">{LanguageUtils.getText('Filter by Level', language)}</label>
           <select 
             className="form-select"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             disabled={!user}
           >
-            <option value="all">All Logs ({logStats.total})</option>
-            <option value="info">Info ({logStats.info})</option>
-            <option value="success">Success ({logStats.success})</option>
-            <option value="warning">Warning ({logStats.warning})</option>
-            <option value="error">Error ({logStats.error})</option>
-            <option value="debug">Debug ({logStats.debug})</option>
+            <option value="all">{LanguageUtils.getText('All Logs', language)} ({logStats.total})</option>
+            <option value="info">{LanguageUtils.getText('Info', language)} ({logStats.info})</option>
+            <option value="success">{LanguageUtils.getText('Success', language)} ({logStats.success})</option>
+            <option value="warning">{LanguageUtils.getText('Warning', language)} ({logStats.warning})</option>
+            <option value="error">{LanguageUtils.getText('Error', language)} ({logStats.error})</option>
+            <option value="debug">{LanguageUtils.getText('Debug', language)} ({logStats.debug})</option>
           </select>
         </div>
 
         <div className="form-group">
-          <label className="form-label">Log Limit</label>
+          <label className="form-label">{LanguageUtils.getText('Log Limit', language)}</label>
           <select 
             className="form-select"
             value={logLimit}
             onChange={(e) => setLogLimit(Number(e.target.value))}
             disabled={!user}
           >
-            <option value={25}>25 logs</option>
-            <option value={50}>50 logs</option>
-            <option value={100}>100 logs</option>
-            <option value={250}>250 logs</option>
-            <option value={500}>500 logs</option>
+            <option value={25}>25 {LanguageUtils.getText('logs', language)}</option>
+            <option value={50}>50 {LanguageUtils.getText('logs', language)}</option>
+            <option value={100}>100 {LanguageUtils.getText('logs', language)}</option>
+            <option value={250}>250 {LanguageUtils.getText('logs', language)}</option>
+            <option value={500}>500 {LanguageUtils.getText('logs', language)}</option>
           </select>
         </div>
       </div>
@@ -426,13 +359,13 @@ const SystemLogs = ({ user }) => {
       <div className="logs-container">
         {!user ? (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
-            Please sign in to view system logs.
+            {LanguageUtils.getText('Please sign in to view system logs.', language)}
           </div>
         ) : filteredLogs.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
             {logs.length === 0 
-              ? 'No logs found yet. System activity will appear here.'
-              : 'No logs found matching the current filter.'
+              ? LanguageUtils.getText('No logs found yet. System activity will appear here.', language)
+              : LanguageUtils.getText('No logs found matching the current filter.', language)
             }
           </div>
         ) : (
@@ -454,7 +387,7 @@ const SystemLogs = ({ user }) => {
               {log.context && Object.keys(log.context).length > 0 && (
                 <div className="log-context">
                   <details>
-                    <summary>Context</summary>
+                    <summary>{LanguageUtils.getText('Context', language)}</summary>
                     <pre>{JSON.stringify(log.context, null, 2)}</pre>
                   </details>
                 </div>
@@ -471,7 +404,7 @@ const SystemLogs = ({ user }) => {
           onClick={refreshLogs}
           disabled={loading || !user}
         >
-          🔄 Refresh
+          🔄 {LanguageUtils.getText('Refresh', language)}
         </button>
         
         <button 
@@ -479,7 +412,7 @@ const SystemLogs = ({ user }) => {
           onClick={exportLogs}
           disabled={loading || !user || logs.length === 0}
         >
-          📥 Export JSON
+          📥 {LanguageUtils.getText('Export JSON', language)}
         </button>
         
         <button 
@@ -487,7 +420,7 @@ const SystemLogs = ({ user }) => {
           onClick={() => clearLogsOlderThan(7)}
           disabled={loading || !user || logs.length === 0}
         >
-          🗑️ Clear Old
+          🗑️ {LanguageUtils.getText('Clear Old', language)}
         </button>
         
         <button 
@@ -495,27 +428,18 @@ const SystemLogs = ({ user }) => {
           onClick={clearOldLogs}
           disabled={loading || !user || logs.length === 0}
         >
-          🗑️ Clear All
-        </button>
-        
-        <button 
-          className="btn btn-info"
-          onClick={addTestLog}
-          disabled={loading || !user}
-        >
-          🧪 Add Test
+          🗑️ {LanguageUtils.getText('Clear All', language)}
         </button>
       </div>
 
       {user && (
         <div style={{ marginTop: '1rem', padding: '1rem', background: '#4e4e4eff', borderRadius: '8px' }}>
-          <h4>Logs Configuration:</h4>
-          <p><strong>User:</strong> {user.email}</p>
-          <p><strong>Total Logs:</strong> {logs.length}</p>
-          <p><strong>Current Filter:</strong> {filter} ({filteredLogs.length} logs)</p>
-          <p><strong>Display Limit:</strong> {logLimit} logs</p>
-          <p><strong>Auto-refresh:</strong> {autoRefresh ? 'Enabled' : 'Disabled'}</p>
-          {/* <p><strong>Collection:</strong> systemLogs (user: {user.uid})</p> */}
+          <h4>{LanguageUtils.getText('Logs Configuration:', language)}</h4>
+          <p><strong>{LanguageUtils.getText('User:', language)}</strong> {user.email}</p>
+          <p><strong>{LanguageUtils.getText('Total Logs:', language)}</strong> {logs.length}</p>
+          <p><strong>{LanguageUtils.getText('Current Filter:', language)}</strong> {filter} ({filteredLogs.length} {LanguageUtils.getText('logs', language)})</p>
+          <p><strong>{LanguageUtils.getText('Display Limit:', language)}</strong> {logLimit} {LanguageUtils.getText('logs', language)}</p>
+          <p><strong>{LanguageUtils.getText('Auto-refresh:', language)}</strong> {autoRefresh ? LanguageUtils.getText('Enabled', language) : LanguageUtils.getText('Disabled', language)}</p>
         </div>
       )}
     </div>

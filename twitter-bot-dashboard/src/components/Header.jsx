@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { auth } from '../services/firebase';
 import { signOut } from 'firebase/auth';
+import { LanguageUtils } from '../utils/language';
 
-const Header = ({ user, activeSection, scrollToSection }) => {
+const Header = ({ user, activeSection, scrollToSection, language, toggleLanguage }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -15,7 +16,7 @@ const Header = ({ user, activeSection, scrollToSection }) => {
   };
 
   const navItems = [
-    { id: 'account', label: 'X Account Settings' },
+    { id: 'account', label: 'Account Settings' },
     { id: 'news', label: 'News Sources' },
     { id: 'contents', label: 'Found Contents' },
     { id: 'ai', label: 'AI Settings' },
@@ -31,11 +32,11 @@ const Header = ({ user, activeSection, scrollToSection }) => {
   return (
     <header className="header">
       <nav className="nav">
-        <div className="logo">🤖 X Bot Manager</div>
+        <div className="logo">🤖 {LanguageUtils.getText('X Bot Manager', language)}</div>
         
-        {/* User Info and Logout */}
+        {/* User Info and Controls */}
         {user && (
-          <div className="nav-user">
+          <div className="nav-controls">
             <div className="user-menu">
               <img 
                 src={user.photoURL || '/default-avatar.png'} 
@@ -53,12 +54,21 @@ const Header = ({ user, activeSection, scrollToSection }) => {
                 👤
               </div>
               <span className="user-name">{user.displayName || user.email}</span>
+              
+              <button 
+                onClick={toggleLanguage} 
+                className="btn btn-secondary btn-small language-btn"
+                title={language === 'english' ? 'Switch to Turkish' : 'Türkçe\'ye geç'}
+              >
+                {language === 'english' ? 'TR' : 'EN'}
+              </button>
+              
               <button 
                 onClick={handleSignOut} 
                 className="btn btn-secondary btn-small logout-btn"
-                title="Sign Out"
+                title={LanguageUtils.getText('Sign Out', language)}
               >
-                🚪 Sign Out
+                🚪 {LanguageUtils.getText('Sign Out', language)}
               </button>
             </div>
           </div>
@@ -78,21 +88,31 @@ const Header = ({ user, activeSection, scrollToSection }) => {
                 className={`nav-link ${activeSection === item.id ? 'active' : ''}`}
                 onClick={() => handleNavClick(item.id)}
               >
-                {item.label}
+                {LanguageUtils.getText(item.label, language)}
               </button>
             </li>
           ))}
           
-          {/* Mobile Logout Option */}
+          {/* Mobile Controls */}
           {user && (
-            <li className="mobile-logout">
-              <button
-                className="nav-link logout-mobile"
-                onClick={handleSignOut}
-              >
-                🚪 Sign Out
-              </button>
-            </li>
+            <>
+              <li className="mobile-controls">
+                <button
+                  className="nav-link language-mobile"
+                  onClick={toggleLanguage}
+                >
+                  {language === 'english' ? '🇹🇷 Türkçe' : '🇺🇸 English'}
+                </button>
+              </li>
+              <li className="mobile-controls">
+                <button
+                  className="nav-link logout-mobile"
+                  onClick={handleSignOut}
+                >
+                  🚪 {LanguageUtils.getText('Sign Out', language)}
+                </button>
+              </li>
+            </>
           )}
         </ul>
       </nav>

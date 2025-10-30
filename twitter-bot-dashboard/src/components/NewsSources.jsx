@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../services/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { LanguageUtils } from '../utils/language';
+import { NewsScraper } from '../services/newsScraper';
 
-const NewsSources = ({ user }) => {
-  const [sources, setSources] = useState(['']);
-  const [scanFrequency, setScanFrequency] = useState(300);
-  const [scanInterval, setScanInterval] = useState(10); // Default 10 minutes
+const NewsSources = ({ user, language }) => {
+  const [sources, setSources] = useState([]);
+  const [scanInterval, setScanInterval] = useState(10);
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
+  const [feedType, setFeedType] = useState('rss'); // 'rss' or 'json'
+
+  // Get predefined RSS sources
+  const rssSources = NewsScraper.getRSSFeeds();
+  const jsonSources = NewsScraper.getJSONFeeds();
+  const allSources = [...rssSources, ...jsonSources];
 
   useEffect(() => {
     if (user) {
@@ -17,171 +24,173 @@ const NewsSources = ({ user }) => {
 
   const loadNewsSettings = async () => {
     try {
-      if (!db) {
-        setSaveStatus('❌ Firebase not initialized');
-        return;
-      }
-
-      if (!user) {
-        setSaveStatus('⚠️ Please sign in to load settings');
-        return;
-      }
+      if (!db || !user) return;
 
       const docRef = doc(db, 'settings', `news_${user.uid}`);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setSources(data.sources || ['']);
-        setScanFrequency(data.scanFrequency || 300);
-        setScanInterval(data.scanInterval || 10); // Load saved interval
-        setSaveStatus(`👤 Loaded news settings for: ${user.email}`);
+        setSources(data.sources || []);
+        setScanInterval(data.scanInterval || 10);
+        setFeedType(data.feedType || 'rss');
+        setSaveStatus(LanguageUtils.getText('👤 Loaded news settings for: ', language) + user.email);
       } else {
-        setSources(['']);
-        setScanFrequency(300);
-        setScanInterval(10); // Default interval
-        setSaveStatus(`👤 Signed in as: ${user.email} - Configure and save news sources.`);
+        // Set default RSS sources (all enabled by default)
+        setSources(rssSources.map(s => s.url));
+        setScanInterval(10);
+        setFeedType('rss');
+        setSaveStatus(LanguageUtils.getText('👤 Signed in as: ', language) + user.email);
       }
     } catch (error) {
       console.error('Error loading news settings:', error);
-      setSaveStatus('❌ Error loading news settings: ' + error.message);
+      setSaveStatus('❌ ' + error.message);
     }
   };
 
   const saveNewsSettings = async () => {
-    if (!db) {
-      setSaveStatus('❌ Firebase not connected');
-      return;
-    }
-
-    if (!user) {
-      setSaveStatus('❌ Please sign in to save settings');
-      return;
-    }
-
-    // Validate URLs
-    const validSources = sources.filter(url => {
-      const trimmed = url.trim();
-      return trimmed !== '' && (trimmed.startsWith('http://') || trimmed.startsWith('https://'));
-    });
-
-    if (validSources.length === 0) {
-      setSaveStatus('❌ Please add at least one valid news source URL');
+    if (!db || !user) {
+      setSaveStatus(LanguageUtils.getText('❌ Please sign in to save settings', language));
       return;
     }
 
     setLoading(true);
-    setSaveStatus('Saving news sources...');
+    setSaveStatus(LanguageUtils.getText('Saving news sources...', language));
     
     try {
       await setDoc(doc(db, 'settings', `news_${user.uid}`), {
-        sources: validSources,
-        scanFrequency,
-        scanInterval: parseInt(scanInterval), // Save the interval
+        sources: sources,
+        scanInterval: parseInt(scanInterval),
+        feedType: feedType,
         userId: user.uid,
         userEmail: user.email,
         lastUpdated: new Date(),
         createdAt: new Date()
       });
       
-      setSaveStatus(`✅ News settings saved! Auto-scan: every ${scanInterval} minutes`);
+      setSaveStatus(LanguageUtils.getText('✅ News settings saved! Auto-scan: every ', language) + scanInterval + LanguageUtils.getText(' minutes', language));
       
-      // Clear status after 3 seconds
       setTimeout(() => setSaveStatus(''), 3000);
     } catch (error) {
       console.error('Error saving news settings:', error);
-      setSaveStatus('❌ Error saving news settings: ' + error.message);
+      setSaveStatus('❌ ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const addSource = () => {
-    setSources(prev => [...prev, '']);
+  const toggleSource = (sourceUrl) => {
+    setSources(prev => 
+      prev.includes(sourceUrl) 
+        ? prev.filter(url => url !== sourceUrl)
+        : [...prev, sourceUrl]
+    );
   };
 
-  const removeSource = (index) => {
-    if (sources.length > 1) {
-      setSources(prev => prev.filter((_, i) => i !== index));
-    } else {
-      // If it's the last source, just clear it instead of removing
-      setSources(['']);
-    }
-  };
-
-  const updateSource = (index, value) => {
-    setSources(prev => prev.map((source, i) => i === index ? value : source));
-  };
-
-  const validateUrl = (url) => {
-    if (!url.trim()) return true; // Empty is okay for intermediate state
-    try {
-      new URL(url);
-      return url.startsWith('http://') || url.startsWith('https://');
-    } catch {
-      return false;
-    }
-  };
-
-  const testNewsSource = async (url) => {
-    if (!url.trim()) {
-      setSaveStatus('❌ Please enter a URL to test');
-      return;
-    }
-
-    if (!validateUrl(url)) {
-      setSaveStatus('❌ Please enter a valid URL (must start with http:// or https://)');
-      return;
-    }
-
-    setSaveStatus(`🔍 Testing connection to: ${url}`);
+  const testSource = async (source) => {
+    if (!source.url) return;
     
-    // Simulate connection test
-    setTimeout(() => {
-      setSaveStatus(`✅ Successfully connected to: ${url}`);
+    setSaveStatus(LanguageUtils.getText('🔍 Testing source: ', language) + source.name);
+    
+    try {
+      let articles = [];
+      
+      if (source.url.includes('reddit.com')) {
+        articles = await NewsScraper.scrapeJSONFeed(source.url, source.name);
+      } else {
+        articles = await NewsScraper.scrapeRSSFeed(source.url, source.name);
+      }
+      
+      setSaveStatus(`✅ ${source.name}: ${articles.length} articles found`);
       setTimeout(() => setSaveStatus(''), 3000);
-    }, 2000);
+    } catch (error) {
+      setSaveStatus(`❌ ${source.name}: Test failed - ${error.message}`);
+      setTimeout(() => setSaveStatus(''), 5000);
+    }
   };
 
   const resetToDefaults = () => {
-    setSources([
-      'https://www.bbc.com/news',
-      'https://www.reuters.com/business/',
-      'https://www.cnbc.com/world/?region=world'
-    ]);
-    setScanFrequency(300);
-    setScanInterval(10);
-    setSaveStatus('🔄 Reset to default news sources');
+    if (feedType === 'rss') {
+      setSources(rssSources.map(s => s.url));
+    } else {
+      setSources(jsonSources.map(s => s.url));
+    }
+    setSaveStatus(LanguageUtils.getText('🔄 Reset to default sources', language));
   };
 
-  // Interval options for user selection
-  const intervalOptions = [
-    { value: 1, label: '1 minute', description: 'Most frequent - may impact performance' },
-    { value: 5, label: '5 minutes', description: 'Very frequent' },
-    { value: 10, label: '10 minutes', description: 'Recommended - balances speed and performance' },
-    { value: 15, label: '15 minutes', description: 'Moderate frequency' },
-    { value: 30, label: '30 minutes', description: 'Less frequent' },
-    { value: 60, label: '1 hour', description: 'Infrequent' },
-    { value: 120, label: '2 hours', description: 'Least frequent' }
-  ];
+  const selectAllSources = () => {
+    if (feedType === 'rss') {
+      setSources(rssSources.map(s => s.url));
+    } else {
+      setSources(jsonSources.map(s => s.url));
+    }
+    setSaveStatus(LanguageUtils.getText('✅ All sources selected', language));
+    setTimeout(() => setSaveStatus(''), 3000);
+  };
+
+  const deselectAllSources = () => {
+    setSources([]);
+    setSaveStatus(LanguageUtils.getText('✅ All sources deselected', language));
+    setTimeout(() => setSaveStatus(''), 3000);
+  };
+
+  const testAllEnabledSources = async () => {
+    const enabledSources = allSources.filter(source => sources.includes(source.url));
+    
+    if (enabledSources.length === 0) {
+      setSaveStatus(LanguageUtils.getText('❌ No sources enabled to test', language));
+      return;
+    }
+
+    setSaveStatus(LanguageUtils.getText('🔍 Testing all enabled sources...', language));
+    
+    let totalArticles = 0;
+    let successfulSources = 0;
+    
+    for (const source of enabledSources) {
+      try {
+        let articles = [];
+        
+        if (source.url.includes('reddit.com')) {
+          articles = await NewsScraper.scrapeJSONFeed(source.url, source.name);
+        } else {
+          articles = await NewsScraper.scrapeRSSFeed(source.url, source.name);
+        }
+        
+        if (articles.length > 0) {
+          totalArticles += articles.length;
+          successfulSources++;
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+      } catch (error) {
+        console.error(`Test failed for ${source.name}:`, error);
+      }
+    }
+    
+    setSaveStatus(`✅ Test completed: ${successfulSources}/${enabledSources.length} sources working, ${totalArticles} total articles`);
+    setTimeout(() => setSaveStatus(''), 5000);
+  };
+
+  const filteredSources = feedType === 'rss' ? rssSources : jsonSources;
 
   return (
     <div className="card">
       <div className="card-header">
-        <h2 className="card-title">News Sources & Auto-Scan</h2>
-        <span className="status-badge status-active">Active</span>
+        <h2 className="card-title">{LanguageUtils.getText('News Sources & Auto-Scan', language)}</h2>
+        <span className="status-badge status-active">{LanguageUtils.getText('Active', language)}</span>
       </div>
       
       <p className="card-subtitle">
-        Configure news sources and automatic scanning frequency.
+        {LanguageUtils.getText('Configure news sources and automatic scanning frequency. Uses CORS proxy for RSS feeds.', language)}
       </p>
 
       {/* Status Message */}
       {saveStatus && (
         <div className={`status-message ${
           saveStatus.includes('✅') ? 'success' : 
-          saveStatus.includes('❌') ? 'error' : 
-          saveStatus.includes('⚠️') ? 'info' : 'info'
+          saveStatus.includes('❌') ? 'error' : 'info'
         }`}>
           {saveStatus}
         </div>
@@ -189,115 +198,129 @@ const NewsSources = ({ user }) => {
 
       {!user && (
         <div className="status-message info">
-          🔐 Please sign in to access and manage news sources.
+          🔐 {LanguageUtils.getText('Please sign in to access and manage news sources.', language)}
         </div>
       )}
 
-      {/* Auto-Scan Interval Settings */}
+      {/* Feed Type Selection */}
       <div className="form-group">
-        <label className="form-label">Auto-Scan Frequency</label>
+        <label className="form-label">{LanguageUtils.getText('Feed Type', language)}</label>
+        <div className="feed-type-selector">
+          <button 
+            className={`feed-type-btn ${feedType === 'rss' ? 'active' : ''}`}
+            onClick={() => setFeedType('rss')}
+          >
+            📰 RSS Feeds
+          </button>
+          <button 
+            className={`feed-type-btn ${feedType === 'json' ? 'active' : ''}`}
+            onClick={() => setFeedType('json')}
+          >
+            🔗 JSON Feeds
+          </button>
+        </div>
+        <small style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', display: 'block' }}>
+          {feedType === 'rss' 
+            ? LanguageUtils.getText('RSS feeds work with CORS proxy. Some may be blocked.', language)
+            : LanguageUtils.getText('JSON feeds (Reddit) work directly without CORS issues.', language)
+          }
+        </small>
+      </div>
+
+      {/* Auto-Scan Interval */}
+      <div className="form-group">
+        <label className="form-label">{LanguageUtils.getText('Auto-Scan Frequency', language)}</label>
         <select 
           className="form-select"
           value={scanInterval}
           onChange={(e) => setScanInterval(parseInt(e.target.value))}
           disabled={!user}
         >
-          {intervalOptions.map(option => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
+          <option value={5}>{LanguageUtils.getText('5 minutes', language)}</option>
+          <option value={10}>{LanguageUtils.getText('10 minutes', language)}</option>
+          <option value={15}>{LanguageUtils.getText('15 minutes', language)}</option>
+          <option value={30}>{LanguageUtils.getText('30 minutes', language)}</option>
+          <option value={60}>{LanguageUtils.getText('1 hour', language)}</option>
         </select>
         <small style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', display: 'block' }}>
-          {intervalOptions.find(opt => opt.value === scanInterval)?.description}
+          {LanguageUtils.getText('System will automatically scan for new content', language)}
         </small>
-        <div style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#666' }}>
-          <strong>Next scan:</strong> Approximately {scanInterval} minutes from last scan
-        </div>
       </div>
 
+      {/* Source Selection */}
       <div className="form-group">
-        <label className="form-label">News Websites</label>
+        <label className="form-label">{LanguageUtils.getText('Select News Sources', language)}</label>
+        
+        {/* Bulk Actions */}
+        <div className="button-group" style={{ marginBottom: '1rem' }}>
+          <button 
+            className="btn btn-secondary btn-small"
+            onClick={selectAllSources}
+            disabled={!user}
+          >
+            ✅ {LanguageUtils.getText('Select All', language)}
+          </button>
+          <button 
+            className="btn btn-secondary btn-small"
+            onClick={deselectAllSources}
+            disabled={!user}
+          >
+            ❌ {LanguageUtils.getText('Deselect All', language)}
+          </button>
+          <button 
+            className="btn btn-secondary btn-small"
+            onClick={resetToDefaults}
+            disabled={!user}
+          >
+            🔄 {LanguageUtils.getText('Reset', language)}
+          </button>
+          <button 
+            className="btn btn-secondary btn-small"
+            onClick={testAllEnabledSources}
+            disabled={!user || sources.length === 0}
+          >
+            🧪 {LanguageUtils.getText('Test All', language)}
+          </button>
+        </div>
+        
         <small style={{ color: 'var(--text-secondary)', marginBottom: '1rem', display: 'block' }}>
-          Add RSS feeds or news website URLs. The system will automatically monitor these for new content.
+          {LanguageUtils.getText('Choose which news sources to monitor. JSON feeds work better for CORS.', language)}
         </small>
         
-        {sources.map((source, index) => (
-          <div key={index} className="url-input-group">
-            <input
-              type="url"
-              className={`form-input ${!validateUrl(source) && source.trim() ? 'input-error' : ''}`}
-              placeholder="https://example.com/news or https://example.com/rss"
-              value={source}
-              onChange={(e) => updateSource(index, e.target.value)}
-              disabled={!user}
-            />
-            <div className="url-actions">
-              <button 
-                className="btn btn-secondary btn-small"
-                onClick={() => testNewsSource(source)}
-                disabled={!user || !source.trim()}
-                title="Test connection"
-              >
-                🔍 Test
-              </button>
-              {sources.length > 1 && (
-                <button 
-                  className="btn btn-secondary btn-small"
-                  onClick={() => removeSource(index)}
-                  type="button"
+        <div className="sources-grid">
+          {filteredSources.map((source, index) => (
+            <div key={index} className="source-checkbox">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={sources.includes(source.url)}
+                  onChange={() => toggleSource(source.url)}
                   disabled={!user}
-                  title="Remove source"
-                >
-                  🗑️
-                </button>
-              )}
+                />
+                <span className="source-name">{source.name}</span>
+                <span className="source-category">{source.category}</span>
+                <span className="source-type">{source.url.includes('reddit.com') ? 'JSON' : 'RSS'}</span>
+                <div className="source-actions">
+                  <button 
+                    type="button"
+                    className="btn-test-source"
+                    onClick={() => testSource(source)}
+                    disabled={!user}
+                    title={LanguageUtils.getText('Test this source', language)}
+                  >
+                    🔍
+                  </button>
+                </div>
+              </label>
             </div>
-          </div>
-        ))}
-        
-        <div className="button-group">
-          <button 
-            className="btn btn-secondary"
-            onClick={addSource}
-            type="button"
-            disabled={!user}
-          >
-            ➕ Add Another Source
-          </button>
-          
-          <button 
-            className="btn btn-secondary"
-            onClick={resetToDefaults}
-            type="button"
-            disabled={!user}
-          >
-            🔄 Reset to Defaults
-          </button>
+          ))}
         </div>
         
         <div style={{ marginTop: '0.5rem' }}>
           <small style={{ color: 'var(--text-secondary)' }}>
-            <strong>Tips:</strong> Use RSS feeds when available for better results. Make sure the websites are publicly accessible.
+            <strong>{LanguageUtils.getText('Selected:', language)}</strong> {sources.length} / {filteredSources.length} {LanguageUtils.getText('sources', language)}
           </small>
         </div>
-      </div>
-
-      <div className="form-group">
-        <label className="form-label">Content Scan Depth</label>
-        <select 
-          className="form-select"
-          value={scanFrequency}
-          onChange={(e) => setScanFrequency(Number(e.target.value))}
-          disabled={!user}
-        >
-          <option value={60}>Quick Scan (fewer articles, faster)</option>
-          <option value={300}>Standard Scan (balanced)</option>
-          <option value={600}>Deep Scan (more articles, slower)</option>
-        </select>
-        <small style={{ color: 'var(--text-secondary)', marginTop: '0.5rem', display: 'block' }}>
-          Controls how many articles are scanned from each source
-        </small>
       </div>
 
       <div className="button-group">
@@ -307,7 +330,7 @@ const NewsSources = ({ user }) => {
           disabled={loading || !user}
         >
           {loading ? <div className="spinner"></div> : '💾'}
-          Save Settings
+          {LanguageUtils.getText('Save Settings', language)}
         </button>
         
         <button 
@@ -315,18 +338,18 @@ const NewsSources = ({ user }) => {
           onClick={loadNewsSettings}
           disabled={!user}
         >
-          🔄 Load Settings
+          🔄 {LanguageUtils.getText('Load Settings', language)}
         </button>
       </div>
 
       {user && (
         <div style={{ marginTop: '1rem', padding: '1rem', background: '#4e4e4eff', borderRadius: '8px' }}>
-          <h4>Auto-Scan Status:</h4>
-          <p><strong>User:</strong> {user.email}</p>
-          <p><strong>Sources Configured:</strong> {sources.filter(url => url.trim() !== '').length}</p>
-          <p><strong>Scan Frequency:</strong> Every {scanInterval} minutes</p>
-          <p><strong>Scan Depth:</strong> {scanFrequency === 60 ? 'Quick' : scanFrequency === 300 ? 'Standard' : 'Deep'}</p>
-          <p><strong>Next Scan:</strong> ~{scanInterval} minutes from last scan</p>
+          <h4>{LanguageUtils.getText('Feed Status:', language)}</h4>
+          <p><strong>{LanguageUtils.getText('User:', language)}</strong> {user.email}</p>
+          <p><strong>{LanguageUtils.getText('Feed Type:', language)}</strong> {feedType.toUpperCase()}</p>
+          <p><strong>{LanguageUtils.getText('Sources Selected:', language)}</strong> {sources.length}</p>
+          <p><strong>{LanguageUtils.getText('Scan Frequency:', language)}</strong> {LanguageUtils.getText('Every', language)} {scanInterval} {LanguageUtils.getText('minutes', language)}</p>
+          <p><strong>{LanguageUtils.getText('CORS Proxy:', language)}</strong> {LanguageUtils.getText('Enabled', language)}</p>
         </div>
       )}
     </div>

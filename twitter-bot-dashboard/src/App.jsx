@@ -15,6 +15,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState('account');
+  const [language, setLanguage] = useState('english');
 
   useEffect(() => {
     // Listen for auth state changes
@@ -38,6 +39,10 @@ function App() {
     }
   };
 
+  const toggleLanguage = () => {
+    setLanguage(prev => prev === 'english' ? 'turkish' : 'english');
+  };
+
   if (loading) {
     return (
       <div className="loading-screen">
@@ -56,32 +61,34 @@ function App() {
       <Header 
         user={user} 
         activeSection={activeSection} 
-        scrollToSection={scrollToSection} 
+        scrollToSection={scrollToSection}
+        language={language}
+        toggleLanguage={toggleLanguage}
       />
       
       <main className="main-content">
         <section id="account" className="section">
-          <AccountSettings user={user} />
+          <AccountSettings user={user} language={language} />
         </section>
         
         <section id="news" className="section">
-          <NewsSources user={user} />
+          <NewsSources user={user} language={language} />
         </section>
         
         <section id="contents" className="section">
-          <FoundContents user={user} />
+          <FoundContents user={user} language={language} />
         </section>
         
         <section id="ai" className="section">
-          <AISettings user={user} />
+          <AISettings user={user} language={language} />
         </section>
         
         <section id="stats" className="section">
-          <Statistics user={user} />
+          <Statistics user={user} language={language} />
         </section>
         
         <section id="logs" className="section">
-          <SystemLogs user={user} />
+          <SystemLogs user={user} language={language} />
         </section>
       </main>
     </div>

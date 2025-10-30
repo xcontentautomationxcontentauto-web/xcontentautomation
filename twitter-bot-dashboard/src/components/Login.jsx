@@ -1,28 +1,27 @@
 import React from 'react';
 import { auth, googleProvider } from '../services/firebase';
 import { signInWithPopup, signOut } from 'firebase/auth';
+import { LanguageUtils } from '../utils/language';
 
-const Login = ({ user, setUser }) => {
+const Login = ({ user, setUser, language = 'english' }) => {
   const signInWithGoogle = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       setUser(result.user);
       console.log('✅ Signed in:', result.user.email);
     } catch (error) {
-      // Handle specific error types
       if (error.code === 'auth/cancelled-popup-request') {
         console.log('ℹ️ Sign-in cancelled by user');
-        // Don't show alert for cancelled popups
         return;
       }
       
       if (error.code === 'auth/popup-blocked') {
-        alert('Please allow popups for this site to sign in.');
+        alert(LanguageUtils.getText('Please allow popups for this site to sign in.', language));
         return;
       }
       
       console.error('❌ Sign-in error:', error);
-      alert('Sign-in failed: ' + error.message);
+      alert(LanguageUtils.getText('Sign-in failed: ', language) + error.message);
     }
   };
 
@@ -51,7 +50,7 @@ const Login = ({ user, setUser }) => {
           </div>
         </div>
         <button onClick={handleSignOut} className="btn btn-secondary">
-          🚪 Sign Out
+          🚪 {LanguageUtils.getText('Sign Out', language)}
         </button>
       </div>
     );
@@ -60,17 +59,16 @@ const Login = ({ user, setUser }) => {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h2>Welcome to X Bot Manager</h2>
-        <p>Sign in to manage your Twitter automation</p>
+        <h2>{LanguageUtils.getText('Welcome to X Bot Manager', language)}</h2>
+        <p>{LanguageUtils.getText('Sign in to manage your Twitter automation', language)}</p>
         <button onClick={signInWithGoogle} className="btn btn-google">
           <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google" />
-          Sign in with Google
+          {LanguageUtils.getText('Sign in with Google', language)}
         </button>
         
-        {/* Add some instructions */}
         <div style={{ marginTop: '2rem', fontSize: '0.9rem', color: '#666' }}>
-          <p><strong>Note:</strong> A popup will open for Google sign-in</p>
-          <p>Please allow popups for this site if prompted</p>
+          <p><strong>{LanguageUtils.getText('Note:', language)}</strong> {LanguageUtils.getText('A popup will open for Google sign-in', language)}</p>
+          <p>{LanguageUtils.getText('Please allow popups for this site if prompted', language)}</p>
         </div>
       </div>
     </div>

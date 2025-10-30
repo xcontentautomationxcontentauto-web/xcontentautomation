@@ -12,15 +12,16 @@ import {
   getDoc
 } from 'firebase/firestore';
 import { ContentScanner } from '../services/contentScanner.js';
+import { LanguageUtils } from '../utils/language';
 
-const FoundContents = ({ user }) => {
+const FoundContents = ({ user, language }) => {
   const [contents, setContents] = useState([]);
   const [filter, setFilter] = useState('all');
   const [posting, setPosting] = useState(false);
   const [status, setStatus] = useState('');
   const [lastScanTime, setLastScanTime] = useState(null);
   const [scanInterval, setScanInterval] = useState(null);
-  const [userScanInterval, setUserScanInterval] = useState(10); // Default 10 minutes
+  const [userScanInterval, setUserScanInterval] = useState(10);
 
   useEffect(() => {
     if (user) {
@@ -29,7 +30,6 @@ const FoundContents = ({ user }) => {
     }
 
     return () => {
-      // Cleanup interval on unmount
       if (scanInterval) {
         clearInterval(scanInterval);
       }
@@ -37,7 +37,6 @@ const FoundContents = ({ user }) => {
   }, [user]);
 
   useEffect(() => {
-    // Restart scanning when user changes interval
     if (user) {
       startAutomaticScanning();
     }
@@ -80,15 +79,12 @@ const FoundContents = ({ user }) => {
   const startAutomaticScanning = async () => {
     if (!user) return;
 
-    // Clear existing interval
     if (scanInterval) {
       clearInterval(scanInterval);
     }
 
-    // Initial scan
     await performBackgroundScan();
 
-    // Set up interval for automatic scanning using user's preference
     const intervalMs = userScanInterval * 60 * 1000;
     const interval = setInterval(async () => {
       await performBackgroundScan();
@@ -103,7 +99,6 @@ const FoundContents = ({ user }) => {
     if (!user) return;
 
     try {
-      // Get user settings
       const accountsDoc = await getDoc(doc(db, 'settings', `accounts_${user.uid}`));
       const newsDoc = await getDoc(doc(db, 'settings', `news_${user.uid}`));
       const aiDoc = await getDoc(doc(db, 'settings', `ai_${user.uid}`));
@@ -114,14 +109,8 @@ const FoundContents = ({ user }) => {
         aiSettings: aiDoc.exists() ? aiDoc.data() : null
       };
 
-      // Check if we have the minimum required settings
       if (!settings.newsSettings?.sources || settings.newsSettings.sources.length === 0) {
-        setStatus('⚠️ Add news sources to start automatic scanning');
-        return;
-      }
-
-      if (!settings.accountSettings?.source) {
-        setStatus('⚠️ Configure X account settings to scan for tweets');
+        setStatus(LanguageUtils.getText('⚠️ Add news sources to start automatic scanning', language));
         return;
       }
 
@@ -130,16 +119,16 @@ const FoundContents = ({ user }) => {
       if (result.success) {
         setLastScanTime(new Date());
         if (result.foundContents > 0) {
-          setStatus(`✅ Found ${result.foundContents} new contents`);
+          setStatus(LanguageUtils.getText('✅ Found ', language) + result.foundContents + LanguageUtils.getText(' new contents', language));
           setTimeout(() => setStatus(''), 5000);
         }
       } else {
-        setStatus(`❌ Scan failed: ${result.error}`);
+        setStatus(LanguageUtils.getText('❌ Scan failed: ', language) + result.error);
         setTimeout(() => setStatus(''), 10000);
       }
     } catch (error) {
       console.error('Background scan error:', error);
-      setStatus(`❌ Scan error: ${error.message}`);
+      setStatus(LanguageUtils.getText('❌ Scan error: ', language) + error.message);
       setTimeout(() => setStatus(''), 10000);
     }
   };
@@ -151,28 +140,28 @@ const FoundContents = ({ user }) => {
         status: 'approved',
         approvedAt: new Date()
       });
-      setStatus('✅ Content approved');
+      setStatus(LanguageUtils.getText('✅ Content approved', language));
       setTimeout(() => setStatus(''), 3000);
     } catch (error) {
       console.error('Error approving content:', error);
-      setStatus('❌ Error approving content');
+      setStatus(LanguageUtils.getText('❌ Error approving content', language));
       setTimeout(() => setStatus(''), 5000);
     }
   };
 
   const postContent = async (content) => {
     if (!user) {
-      setStatus('❌ Please sign in to post content');
+      setStatus(LanguageUtils.getText('❌ Please sign in to post content', language));
       return;
     }
 
     setPosting(true);
-    setStatus('🚀 Posting content...');
+    setStatus(LanguageUtils.getText('🚀 Posting content...', language));
 
     try {
       const accountsDoc = await getDoc(doc(db, 'settings', `accounts_${user.uid}`));
       if (!accountsDoc.exists()) {
-        throw new Error('Account settings not found');
+        throw new Error(LanguageUtils.getText('Account settings not found', language));
       }
 
       const accountSettings = accountsDoc.data();
@@ -186,10 +175,10 @@ const FoundContents = ({ user }) => {
       };
 
       await ContentScanner.postApprovedContent(contentWithCustomText, accountSettings);
-      setStatus('✅ Content posted successfully!');
+      setStatus(LanguageUtils.getText('✅ Content posted successfully!', language));
     } catch (error) {
       console.error('Error posting content:', error);
-      setStatus(`❌ Error posting: ${error.message}`);
+      setStatus(LanguageUtils.getText('❌ Error posting: ', language) + error.message);
     } finally {
       setPosting(false);
       setTimeout(() => setStatus(''), 5000);
@@ -203,11 +192,11 @@ const FoundContents = ({ user }) => {
         status: 'rejected',
         rejectedAt: new Date()
       });
-      setStatus('❌ Content rejected');
+      setStatus(LanguageUtils.getText('❌ Content rejected', language));
       setTimeout(() => setStatus(''), 3000);
     } catch (error) {
       console.error('Error rejecting content:', error);
-      setStatus('❌ Error rejecting content');
+      setStatus(LanguageUtils.getText('❌ Error rejecting content', language));
       setTimeout(() => setStatus(''), 5000);
     }
   };
@@ -215,11 +204,11 @@ const FoundContents = ({ user }) => {
   const deleteContent = async (contentId) => {
     try {
       await deleteDoc(doc(db, 'foundContents', contentId));
-      setStatus('🗑️ Content deleted');
+      setStatus(LanguageUtils.getText('🗑️ Content deleted', language));
       setTimeout(() => setStatus(''), 3000);
     } catch (error) {
       console.error('Error deleting content:', error);
-      setStatus('❌ Error deleting content');
+      setStatus(LanguageUtils.getText('❌ Error deleting content', language));
       setTimeout(() => setStatus(''), 5000);
     }
   };
@@ -240,7 +229,7 @@ const FoundContents = ({ user }) => {
     const config = statusConfig[status] || statusConfig.pending;
     return (
       <span className={`status-badge ${config.class}`}>
-        {config.emoji} {config.label}
+        {config.emoji} {LanguageUtils.getText(config.label, language)}
       </span>
     );
   };
@@ -252,46 +241,46 @@ const FoundContents = ({ user }) => {
   };
 
   const formatTimeAgo = (timestamp) => {
-    if (!timestamp) return 'Never';
+    if (!timestamp) return LanguageUtils.getText('Never', language);
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     const now = new Date();
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffMins < 1) return LanguageUtils.getText('Just now', language);
+    if (diffMins < 60) return `${diffMins}m ${LanguageUtils.getText('ago', language)}`;
+    if (diffHours < 24) return `${diffHours}h ${LanguageUtils.getText('ago', language)}`;
     return formatDate(timestamp);
   };
 
   const getNextScanTime = () => {
-    if (!lastScanTime) return 'Soon';
+    if (!lastScanTime) return LanguageUtils.getText('Soon', language);
     const nextScan = new Date(lastScanTime.getTime() + (userScanInterval * 60000));
     const now = new Date();
     const diffMs = nextScan - now;
     const diffMins = Math.max(0, Math.floor(diffMs / 60000));
     
-    if (diffMins === 0) return 'Any moment';
-    return `in ${diffMins} minute${diffMins !== 1 ? 's' : ''}`;
+    if (diffMins === 0) return LanguageUtils.getText('Any moment', language);
+    return LanguageUtils.getText('in', language) + ` ${diffMins} ` + (diffMins !== 1 ? LanguageUtils.getText('minutes', language) : LanguageUtils.getText('minute', language));
   };
 
   return (
     <div className="card">
       <div className="card-header">
-        <h2 className="card-title">Found Contents</h2>
+        <h2 className="card-title">{LanguageUtils.getText('Found Contents', language)}</h2>
         <div className="header-status">
-          <span className="status-badge status-active">{contents.length} Items</span>
+          <span className="status-badge status-active">{contents.length} {LanguageUtils.getText('Items', language)}</span>
           {lastScanTime && (
             <span className="scan-time">
-              🔄 Auto-scan: every {userScanInterval} min • Last: {formatTimeAgo(lastScanTime)} • Next: {getNextScanTime()}
+              🔄 {LanguageUtils.getText('Auto-scan:', language)} {LanguageUtils.getText('every', language)} {userScanInterval} {LanguageUtils.getText('min', language)} • {LanguageUtils.getText('Last:', language)} {formatTimeAgo(lastScanTime)} • {LanguageUtils.getText('Next:', language)} {getNextScanTime()}
             </span>
           )}
         </div>
       </div>
       
       <p className="card-subtitle">
-        Automatically discovered tweets and news articles. Configure scan frequency in News Sources.
+        {LanguageUtils.getText('Automatically discovered news articles from RSS feeds. Configure scan frequency in News Sources.', language)}
       </p>
 
       {/* Status Message */}
@@ -306,17 +295,17 @@ const FoundContents = ({ user }) => {
 
       <div className="content-controls">
         <div className="filter-group">
-          <label className="form-label">Filter by Status</label>
+          <label className="form-label">{LanguageUtils.getText('Filter by Status', language)}</label>
           <select 
             className="form-select"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
-            <option value="all">All Contents ({contents.length})</option>
-            <option value="pending">Pending Review ({contents.filter(c => c.status === 'pending').length})</option>
-            <option value="approved">Approved ({contents.filter(c => c.status === 'approved').length})</option>
-            <option value="posted">Posted ({contents.filter(c => c.status === 'posted').length})</option>
-            <option value="rejected">Rejected ({contents.filter(c => c.status === 'rejected').length})</option>
+            <option value="all">{LanguageUtils.getText('All Contents', language)} ({contents.length})</option>
+            <option value="pending">{LanguageUtils.getText('Pending Review', language)} ({contents.filter(c => c.status === 'pending').length})</option>
+            <option value="approved">{LanguageUtils.getText('Approved', language)} ({contents.filter(c => c.status === 'approved').length})</option>
+            <option value="posted">{LanguageUtils.getText('Posted', language)} ({contents.filter(c => c.status === 'posted').length})</option>
+            <option value="rejected">{LanguageUtils.getText('Rejected', language)} ({contents.filter(c => c.status === 'rejected').length})</option>
           </select>
         </div>
       </div>
@@ -324,17 +313,17 @@ const FoundContents = ({ user }) => {
       <div className="contents-list">
         {filteredContents.length === 0 ? (
           <div className="no-content">
-            <p>No contents found matching the current filter.</p>
-            {!user && <p>Please sign in to see your contents.</p>}
+            <p>{LanguageUtils.getText('No contents found matching the current filter.', language)}</p>
+            {!user && <p>{LanguageUtils.getText('Please sign in to see your contents.', language)}</p>}
             {user && contents.length === 0 && (
               <div className="setup-guide">
-                <h4>To get started:</h4>
+                <h4>{LanguageUtils.getText('To get started:', language)}</h4>
                 <ol>
-                  <li>Configure your X account settings</li>
-                  <li>Add news sources to monitor</li>
-                  <li>Set up AI keywords for filtering</li>
-                  <li>Choose your preferred scan frequency in News Sources</li>
-                  <li>The system will automatically scan every {userScanInterval} minutes</li>
+                  <li>{LanguageUtils.getText('Configure your X account settings', language)}</li>
+                  <li>{LanguageUtils.getText('Add news sources to monitor', language)}</li>
+                  <li>{LanguageUtils.getText('Set up AI keywords for filtering', language)}</li>
+                  <li>{LanguageUtils.getText('Choose your preferred scan frequency in News Sources', language)}</li>
+                  <li>{LanguageUtils.getText('The system will automatically scan every', language)} {userScanInterval} {LanguageUtils.getText('minutes', language)}</li>
                 </ol>
               </div>
             )}
@@ -346,6 +335,11 @@ const FoundContents = ({ user }) => {
                 <div>
                   <span className="content-source">
                     {content.type === 'tweet' ? '🐦 Tweet' : '📰 News'} • {content.source}
+                    {content.language && (
+                      <span className="language-badge">
+                        {content.language === 'turkish' ? '🇹🇷' : '🇺🇸'}
+                      </span>
+                    )}
                   </span>
                   <div className="content-date">
                     {formatDate(content.timestamp)}
@@ -364,7 +358,7 @@ const FoundContents = ({ user }) => {
                       rel="noopener noreferrer"
                       style={{ fontSize: '0.9rem', color: '#1da1f2' }}
                     >
-                      🔗 View Original
+                      🔗 {LanguageUtils.getText('View Original', language)}
                     </a>
                   </div>
                 )}
@@ -372,16 +366,16 @@ const FoundContents = ({ user }) => {
 
               {content.ai_analysis && (
                 <div className="ai-analysis">
-                  <strong>AI Analysis:</strong>
+                  <strong>{LanguageUtils.getText('AI Analysis:', language)}</strong>
                   <span className={`sentiment ${content.ai_analysis.sentiment}`}>
                     {content.ai_analysis.sentiment} 
                   </span>
                   <span className="confidence">
-                    ({Math.round(content.ai_analysis.confidence * 100)}% confidence)
+                    ({Math.round(content.ai_analysis.confidence * 100)}% {LanguageUtils.getText('confidence', language)})
                   </span>
                   {content.ai_analysis.relevant_keywords?.length > 0 && (
                     <div className="keywords">
-                      <strong>Keywords:</strong> {content.ai_analysis.relevant_keywords.join(', ')}
+                      <strong>{LanguageUtils.getText('Keywords:', language)}</strong> {content.ai_analysis.relevant_keywords.join(', ')}
                     </div>
                   )}
                 </div>
@@ -395,13 +389,13 @@ const FoundContents = ({ user }) => {
                       onClick={() => approveContent(content.id)}
                       disabled={posting}
                     >
-                      ✅ Approve
+                      ✅ {LanguageUtils.getText('Approve', language)}
                     </button>
                     <button 
                       className="btn btn-warning"
                       onClick={() => rejectContent(content.id)}
                     >
-                      ❌ Reject
+                      ❌ {LanguageUtils.getText('Reject', language)}
                     </button>
                   </>
                 )}
@@ -413,7 +407,7 @@ const FoundContents = ({ user }) => {
                     disabled={posting}
                   >
                     {posting ? <div className="spinner"></div> : '🚀'}
-                    {posting ? 'Posting...' : 'Post Now'}
+                    {posting ? LanguageUtils.getText('Posting...', language) : LanguageUtils.getText('Post Now', language)}
                   </button>
                 )}
                 
@@ -421,7 +415,7 @@ const FoundContents = ({ user }) => {
                   className="btn btn-secondary"
                   onClick={() => deleteContent(content.id)}
                 >
-                  🗑️ Delete
+                  🗑️ {LanguageUtils.getText('Delete', language)}
                 </button>
               </div>
             </div>
@@ -431,7 +425,7 @@ const FoundContents = ({ user }) => {
 
       {!user && (
         <div className="status-message info">
-          🔐 Please sign in to view and manage found contents.
+          🔐 {LanguageUtils.getText('Please sign in to view and manage found contents.', language)}
         </div>
       )}
     </div>
