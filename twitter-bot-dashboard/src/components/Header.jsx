@@ -32,87 +32,122 @@ const Header = ({ user, activeSection, scrollToSection, language, toggleLanguage
   return (
     <header className="header">
       <nav className="nav">
-        <div className="logo">🤖 {LanguageUtils.getText('X Bot Manager', language)}</div>
+        <div className="logo">
+          <span className="logo-icon">🤖</span>
+          <span className="logo-text">{LanguageUtils.getText('X Bot Manager', language)}</span>
+        </div>
         
-        {/* User Info and Controls */}
+        {/* Desktop Navigation & User Controls */}
         {user && (
           <div className="nav-controls">
             <div className="user-menu">
-              <img 
-                src={user.photoURL || '/default-avatar.png'} 
-                alt={user.displayName || 'User'} 
-                className="user-avatar-small"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'inline-block';
-                }}
-              />
-              <div 
-                className="user-avatar-fallback"
-                style={{display: 'none'}}
-              >
-                👤
+              <div className="user-avatar-container">
+                <img 
+                  src={user.photoURL || '/default-avatar.png'} 
+                  alt={user.displayName || 'User'} 
+                  className="user-avatar"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+                <div className="user-avatar-fallback">
+                  👤
+                </div>
               </div>
-              <span className="user-name">{user.displayName || user.email}</span>
+              <div className="user-info">
+                <span className="user-name">{user.displayName || user.email}</span>
+                <span className="user-status">● Active</span>
+              </div>
               
-              <button 
-                onClick={toggleLanguage} 
-                className="btn btn-secondary btn-small language-btn"
-                title={language === 'english' ? 'Switch to Turkish' : 'Türkçe\'ye geç'}
-              >
-                {language === 'english' ? 'TR' : 'EN'}
-              </button>
-              
-              <button 
-                onClick={handleSignOut} 
-                className="btn btn-secondary btn-small logout-btn"
-                title={LanguageUtils.getText('Sign Out', language)}
-              >
-                🚪 {LanguageUtils.getText('Sign Out', language)}
-              </button>
+              <div className="user-actions">
+                <button 
+                  onClick={toggleLanguage} 
+                  className="btn btn-language"
+                  title={language === 'english' ? 'Switch to Turkish' : 'Türkçe\'ye geç'}
+                >
+                  {language === 'english' ? '🇹🇷 TR' : '🇺🇸 EN'}
+                </button>
+                
+                <button 
+                  onClick={handleSignOut} 
+                  className="btn btn-logout"
+                  title={LanguageUtils.getText('Sign Out', language)}
+                >
+                  <span className="logout-icon">🚪</span>
+                  <span className="logout-text">{LanguageUtils.getText('Sign Out', language)}</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
 
+        {/* Mobile Menu Button */}
         <button 
           className="mobile-menu-btn"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle menu"
         >
-          ☰
+          <span className="menu-bar"></span>
+          <span className="menu-bar"></span>
+          <span className="menu-bar"></span>
         </button>
 
+        {/* Navigation Links */}
         <ul className={`nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
           {navItems.map((item) => (
-            <li key={item.id}>
+            <li key={item.id} className="nav-item">
               <button
                 className={`nav-link ${activeSection === item.id ? 'active' : ''}`}
                 onClick={() => handleNavClick(item.id)}
+                aria-current={activeSection === item.id ? 'page' : undefined}
               >
-                {LanguageUtils.getText(item.label, language)}
+                <span className="nav-link-text">
+                  {LanguageUtils.getText(item.label, language)}
+                </span>
+                {activeSection === item.id && (
+                  <span className="nav-indicator"></span>
+                )}
               </button>
             </li>
           ))}
           
-          {/* Mobile Controls */}
+          {/* Mobile User Controls */}
           {user && (
-            <>
-              <li className="mobile-controls">
+            <div className="mobile-user-controls">
+              <div className="mobile-user-info">
+                <div className="user-avatar-container">
+                  <img 
+                    src={user.photoURL || '/default-avatar.png'} 
+                    alt={user.displayName || 'User'} 
+                    className="user-avatar"
+                  />
+                  <div className="user-avatar-fallback">
+                    👤
+                  </div>
+                </div>
+                <div className="mobile-user-details">
+                  <span className="user-name">{user.displayName || user.email}</span>
+                  <span className="user-status">● Active</span>
+                </div>
+              </div>
+              
+              <div className="mobile-controls">
                 <button
-                  className="nav-link language-mobile"
+                  className="btn btn-language-mobile"
                   onClick={toggleLanguage}
                 >
-                  {language === 'english' ? '🇹🇷 Türkçe' : '🇺🇸 English'}
+                  {language === 'english' ? '🇹🇷 Switch to Turkish' : '🇺🇸 Switch to English'}
                 </button>
-              </li>
-              <li className="mobile-controls">
+                
                 <button
-                  className="nav-link logout-mobile"
+                  className="btn btn-logout-mobile"
                   onClick={handleSignOut}
                 >
                   🚪 {LanguageUtils.getText('Sign Out', language)}
                 </button>
-              </li>
-            </>
+              </div>
+            </div>
           )}
         </ul>
       </nav>
