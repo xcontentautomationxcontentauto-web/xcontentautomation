@@ -20,7 +20,7 @@ export class NewsScraper {
       },
       {
         name: 'Press TV (Iran)',
-        url: 'https://www.presstv.ir/RSS/Main/1',
+        url: 'https://www.presstv.ir/rss.xml',
         category: 'middle-east',
         country: 'Iran',
         language: 'english'
