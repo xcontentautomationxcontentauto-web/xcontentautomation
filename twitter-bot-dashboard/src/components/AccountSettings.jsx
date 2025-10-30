@@ -110,8 +110,10 @@ const AccountSettings = ({ user }) => {
     }));
   };
 
-  // Enhanced Twitter API verification
+  // Enhanced Twitter API verification with proper account type handling
   const verifyTwitterCredentials = async (accountType = 'both') => {
+    console.log(`🔍 Starting verification for: ${accountType}`);
+    
     if (!accounts.consumerKey || !accounts.consumerSecret) {
       setVerificationStatus({
         type: 'error',
@@ -134,54 +136,98 @@ const AccountSettings = ({ user }) => {
 
       const results = {};
 
-      // Test API connection
+      // Test API connection first (required for all verifications)
       setVerificationStatus({ type: 'info', message: '🔍 Testing Twitter API connection...' });
       
-      const connectionTest = await TwitterService.testConnection();
-      results.api = { success: true, data: connectionTest };
+      try {
+        const connectionTest = await TwitterService.testConnection();
+        results.api = { success: true, data: connectionTest };
+        console.log('✅ API connection successful:', connectionTest);
+      } catch (apiError) {
+        results.api = { success: false, error: apiError.message };
+        console.error('❌ API connection failed:', apiError);
+        throw new Error(`API connection failed: ${apiError.message}`);
+      }
 
-      // Test source account if specified
-      if ((accountType === 'both' || accountType === 'source') && accounts.source) {
-        setVerificationStatus({ type: 'info', message: `🔍 Testing source account: ${accounts.source}...` });
-        try {
-          const sourceTweets = await TwitterService.getUserTweets(accounts.source.replace('@', ''), 5);
-          results.source = { 
-            success: true, 
-            data: { 
-              tweetsFound: sourceTweets.length,
-              latestTweet: sourceTweets[0]?.text?.substring(0, 100) + '...' || 'No tweets found'
-            }
-          };
-        } catch (error) {
-          results.source = { success: false, error: error.message };
+      // Test specific accounts based on accountType
+      if (accountType === 'both' || accountType === 'source') {
+        if (!accounts.source) {
+          results.source = { success: false, error: 'Source account username not provided' };
+        } else {
+          setVerificationStatus({ type: 'info', message: `🔍 Testing source account: ${accounts.source}...` });
+          try {
+            const sourceUsername = accounts.source.replace('@', '');
+            const sourceTweets = await TwitterService.getUserTweets(sourceUsername, 3);
+            results.source = { 
+              success: true, 
+              data: { 
+                username: sourceUsername,
+                tweetsFound: sourceTweets.length,
+                latestTweet: sourceTweets[0]?.text?.substring(0, 100) + '...' || 'No tweets found',
+                accountExists: true
+              }
+            };
+            console.log(`✅ Source account verified: ${sourceUsername}`, results.source.data);
+          } catch (sourceError) {
+            results.source = { 
+              success: false, 
+              error: sourceError.message,
+              accountExists: false
+            };
+            console.error(`❌ Source account verification failed:`, sourceError);
+          }
         }
       }
 
-      // Test target account if specified
-      if ((accountType === 'both' || accountType === 'target') && accounts.target) {
-        setVerificationStatus({ type: 'info', message: `🔍 Testing target account: ${accounts.target}...` });
-        try {
-          const targetTweets = await TwitterService.getUserTweets(accounts.target.replace('@', ''), 5);
-          results.target = { 
-            success: true, 
-            data: { 
-              tweetsFound: targetTweets.length,
-              latestTweet: targetTweets[0]?.text?.substring(0, 100) + '...' || 'No tweets found'
-            }
-          };
-        } catch (error) {
-          results.target = { success: false, error: error.message };
+      if (accountType === 'both' || accountType === 'target') {
+        if (!accounts.target) {
+          results.target = { success: false, error: 'Target account username not provided' };
+        } else {
+          setVerificationStatus({ type: 'info', message: `🔍 Testing target account: ${accounts.target}...` });
+          try {
+            const targetUsername = accounts.target.replace('@', '');
+            const targetTweets = await TwitterService.getUserTweets(targetUsername, 3);
+            results.target = { 
+              success: true, 
+              data: { 
+                username: targetUsername,
+                tweetsFound: targetTweets.length,
+                latestTweet: targetTweets[0]?.text?.substring(0, 100) + '...' || 'No tweets found',
+                accountExists: true
+              }
+            };
+            console.log(`✅ Target account verified: ${targetUsername}`, results.target.data);
+          } catch (targetError) {
+            results.target = { 
+              success: false, 
+              error: targetError.message,
+              accountExists: false
+            };
+            console.error(`❌ Target account verification failed:`, targetError);
+          }
         }
       }
 
-      // Update verification status
-      setVerificationStatus({
-        type: 'success',
-        message: '✅ Twitter credentials verified successfully!',
-        details: results
-      });
-
-      console.log('🔍 Verification results:', results);
+      // Determine overall success
+      const allSuccessful = Object.values(results).every(result => result.success);
+      
+      if (allSuccessful) {
+        setVerificationStatus({
+          type: 'success',
+          message: `✅ Twitter ${accountType === 'both' ? 'accounts' : accountType + ' account'} verified successfully!`,
+          details: results
+        });
+      } else {
+        const failedAccounts = Object.entries(results)
+          .filter(([key, result]) => !result.success && key !== 'api')
+          .map(([key]) => key);
+        
+        setVerificationStatus({
+          type: 'warning',
+          message: `⚠️ Partial verification: ${failedAccounts.join(', ')} failed`,
+          details: results
+        });
+      }
 
     } catch (error) {
       console.error('❌ Twitter verification failed:', error);
@@ -195,9 +241,85 @@ const AccountSettings = ({ user }) => {
     }
   };
 
-  const verifySourceAccount = () => verifyTwitterCredentials('source');
-  const verifyTargetAccount = () => verifyTwitterCredentials('target');
-  const verifyBothAccounts = () => verifyTwitterCredentials('both');
+  // Individual verification functions
+  const verifySourceAccount = () => {
+    console.log('🎯 Verifying source account only');
+    verifyTwitterCredentials('source');
+  };
+
+  const verifyTargetAccount = () => {
+    console.log('🎯 Verifying target account only');
+    verifyTwitterCredentials('target');
+  };
+
+  const verifyBothAccounts = () => {
+    console.log('🎯 Verifying both accounts');
+    verifyTwitterCredentials('both');
+  };
+
+  // Quick verification for individual accounts (simpler version)
+  const quickVerifyAccount = async (accountType) => {
+    const username = accountType === 'source' ? accounts.source : accounts.target;
+    if (!username) {
+      setVerificationStatus({
+        type: 'error',
+        message: `❌ Please enter ${accountType} account username first`
+      });
+      return;
+    }
+
+    if (!accounts.consumerKey || !accounts.consumerSecret) {
+      setVerificationStatus({
+        type: 'error',
+        message: '❌ Please enter Consumer Key and Consumer Secret first'
+      });
+      return;
+    }
+
+    setTestingConnection(true);
+    setVerificationStatus({ type: 'info', message: `🔍 Quick verifying ${accountType} account: ${username}...` });
+
+    try {
+      TwitterService.initializeClient({
+        consumerKey: accounts.consumerKey,
+        consumerSecret: accounts.consumerSecret,
+        accessToken: accounts.accessToken,
+        accessTokenSecret: accounts.accessTokenSecret
+      });
+
+      const cleanUsername = username.replace('@', '');
+      const tweets = await TwitterService.getUserTweets(cleanUsername, 2);
+      
+      setVerificationStatus({
+        type: 'success',
+        message: `✅ ${accountType === 'source' ? 'Source' : 'Target'} account verified! Found ${tweets.length} tweets.`,
+        details: {
+          [accountType]: {
+            success: true,
+            data: {
+              username: cleanUsername,
+              tweetsFound: tweets.length,
+              latestTweet: tweets[0]?.text?.substring(0, 80) + '...' || 'No recent tweets'
+            }
+          }
+        }
+      });
+
+    } catch (error) {
+      setVerificationStatus({
+        type: 'error',
+        message: `❌ ${accountType === 'source' ? 'Source' : 'Target'} account verification failed: ${error.message}`,
+        details: {
+          [accountType]: {
+            success: false,
+            error: error.message
+          }
+        }
+      });
+    } finally {
+      setTestingConnection(false);
+    }
+  };
 
   const testFirebaseConnection = async () => {
     try {
@@ -307,14 +429,14 @@ const AccountSettings = ({ user }) => {
       )}
 
       {verificationStatus.message && (
-        <div className={`status-message ${verificationStatus.type === 'success' ? 'success' : verificationStatus.type === 'error' ? 'error' : 'info'}`}>
+        <div className={`status-message ${verificationStatus.type === 'success' ? 'success' : verificationStatus.type === 'error' ? 'error' : verificationStatus.type === 'warning' ? 'warning' : 'info'}`}>
           {verificationStatus.message}
           
           {verificationStatus.details && (
             <div style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}>
               <h4>Verification Details:</h4>
               {verificationStatus.details.api && (
-                <div>
+                <div style={{ marginBottom: '0.5rem' }}>
                   <strong>API Connection:</strong> {verificationStatus.details.api.success ? '✅ Success' : '❌ Failed'}
                   {verificationStatus.details.api.data && (
                     <div style={{ marginLeft: '1rem', fontSize: '0.9rem' }}>
@@ -322,10 +444,15 @@ const AccountSettings = ({ user }) => {
                       User ID: {verificationStatus.details.api.data.id}
                     </div>
                   )}
+                  {verificationStatus.details.api.error && (
+                    <div style={{ marginLeft: '1rem', fontSize: '0.9rem', color: '#ff6b6b' }}>
+                      Error: {verificationStatus.details.api.error}
+                    </div>
+                  )}
                 </div>
               )}
               {verificationStatus.details.source && (
-                <div>
+                <div style={{ marginBottom: '0.5rem' }}>
                   <strong>Source Account ({accounts.source}):</strong> {verificationStatus.details.source.success ? '✅ Success' : '❌ Failed'}
                   {verificationStatus.details.source.data && (
                     <div style={{ marginLeft: '1rem', fontSize: '0.9rem' }}>
@@ -341,7 +468,7 @@ const AccountSettings = ({ user }) => {
                 </div>
               )}
               {verificationStatus.details.target && (
-                <div>
+                <div style={{ marginBottom: '0.5rem' }}>
                   <strong>Target Account ({accounts.target}):</strong> {verificationStatus.details.target.success ? '✅ Success' : '❌ Failed'}
                   {verificationStatus.details.target.data && (
                     <div style={{ marginLeft: '1rem', fontSize: '0.9rem' }}>
@@ -468,25 +595,25 @@ const AccountSettings = ({ user }) => {
           {testingConnection ? <div className="spinner"></div> : '🔍'}
           Verify Both Accounts
         </button>
-        
-        <button 
-          className="btn btn-secondary" 
-          onClick={verifySourceAccount}
-          disabled={testingConnection || !user || !accounts.source || !accounts.consumerKey}
-        >
-          🎯 Verify Source Only
-        </button>
-        
-        <button 
-          className="btn btn-secondary" 
-          onClick={verifyTargetAccount}
-          disabled={testingConnection || !user || !accounts.target || !accounts.consumerKey}
-        >
-          🎯 Verify Target Only
-        </button>
       </div>
 
       <div className="form-group" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+        <button 
+          className="btn btn-secondary" 
+          onClick={() => quickVerifyAccount('source')}
+          disabled={testingConnection || !user || !accounts.source || !accounts.consumerKey}
+        >
+          🎯 Quick Verify Source
+        </button>
+        
+        <button 
+          className="btn btn-secondary" 
+          onClick={() => quickVerifyAccount('target')}
+          disabled={testingConnection || !user || !accounts.target || !accounts.consumerKey}
+        >
+          🎯 Quick Verify Target
+        </button>
+        
         <button 
           className="btn btn-secondary" 
           onClick={initializeFirestore}
