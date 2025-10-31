@@ -1,86 +1,128 @@
 import axios from 'axios';
+import OAuth from 'oauth-1.0a';
+import crypto from 'crypto';
 
 export class TwitterService {
   static client = null;
-  static bearerToken = null;
+  static oauth = null;
 
   static initializeClient(credentials) {
     if (!credentials.consumerKey || !credentials.consumerSecret) {
       throw new Error('Missing Twitter API credentials');
     }
-    
+
     // Store credentials for API calls
     this.client = {
       consumerKey: credentials.consumerKey,
       consumerSecret: credentials.consumerSecret,
       accessToken: credentials.accessToken,
-      accessSecret: credentials.accessTokenSecret
+      accessTokenSecret: credentials.accessTokenSecret
     };
-    
-    this.bearerToken = btoa(`${credentials.consumerKey}:${credentials.consumerSecret}`);
+
+    // Initialize OAuth 1.0a
+    this.oauth = OAuth({
+      consumer: {
+        key: credentials.consumerKey,
+        secret: credentials.consumerSecret
+      },
+      signature_method: 'HMAC-SHA1',
+      hash_function(base_string, key) {
+        return crypto
+          .createHmac('sha1', key)
+          .update(base_string)
+          .digest('base64');
+      }
+    });
   }
 
-  static async getBearerToken() {
-    if (!this.bearerToken) {
+  static getAuthHeaders(url, method = 'GET') {
+    if (!this.oauth || !this.client) {
       throw new Error('Twitter client not initialized');
     }
 
+    const token = {
+      key: this.client.accessToken,
+      secret: this.client.accessTokenSecret
+    };
+
+    const requestData = {
+      url: url,
+      method: method
+    };
+
+    return this.oauth.toHeader(this.oauth.authorize(requestData, token));
+  }
+
+  static async makeTwitterRequest(url, method = 'GET', params = {}) {
     try {
-      const response = await axios.post(
-        'https://api.twitter.com/oauth2/token',
-        'grant_type=client_credentials',
-        {
-          headers: {
-            'Authorization': `Basic ${this.bearerToken}`,
-            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
-          }
-        }
-      );
+      const headers = this.getAuthHeaders(url, method);
       
-      return response.data.access_token;
+      const config = {
+        method: method,
+        url: url,
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json'
+        }
+      };
+
+      if (method === 'GET' && Object.keys(params).length > 0) {
+        config.params = params;
+      }
+
+      console.log(`🔍 Making Twitter API request to: ${url}`);
+      const response = await axios(config);
+      
+      return response.data;
     } catch (error) {
-      console.error('❌ Error getting bearer token:', error.response?.data || error.message);
-      throw new Error('Failed to authenticate with Twitter API. Check your API credentials.');
+      console.error('❌ Twitter API request failed:', {
+        url: url,
+        method: method,
+        error: error.response?.data || error.message,
+        status: error.response?.status
+      });
+      
+      if (error.response?.status === 401) {
+        throw new Error('Invalid Twitter API credentials. Please check your Consumer Key, Consumer Secret, Access Token, and Access Token Secret.');
+      } else if (error.response?.status === 403) {
+        throw new Error('Twitter API access forbidden. Please check your app permissions in the Twitter Developer Portal.');
+      } else if (error.response?.status === 429) {
+        throw new Error('Twitter API rate limit exceeded. Please try again later.');
+      } else if (error.response?.data) {
+        const twitterError = error.response.data;
+        throw new Error(`Twitter API error: ${twitterError.detail || twitterError.title || 'Unknown error'}`);
+      } else {
+        throw new Error(`Twitter API request failed: ${error.message}`);
+      }
     }
   }
 
-  static async getUserTweets(username, maxTweets = 50) {
+  static async getUserTweets(username, maxTweets = 10) {
     try {
-      const bearerToken = await this.getBearerToken();
-      
       console.log(`🔍 Fetching tweets for user: ${username}`);
-      
+
       // Get user ID first
-      const userResponse = await axios.get(
-        `https://api.twitter.com/2/users/by/username/${username.replace('@', '')}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${bearerToken}`
-          }
-        }
-      );
+      const userUrl = `https://api.twitter.com/2/users/by/username/${username.replace('@', '')}`;
+      const userResponse = await this.makeTwitterRequest(userUrl);
 
-      const userId = userResponse.data.data.id;
+      if (!userResponse.data) {
+        throw new Error(`User @${username} not found`);
+      }
+
+      const userId = userResponse.data.id;
       console.log(`✅ Found user ID: ${userId}`);
-      
-      // Get user's tweets
-      const tweetsResponse = await axios.get(
-        `https://api.twitter.com/2/users/${userId}/tweets`,
-        {
-          headers: {
-            'Authorization': `Bearer ${bearerToken}`
-          },
-          params: {
-            'max_results': maxTweets,
-            'tweet.fields': 'created_at,author_id,text,public_metrics',
-            'exclude': 'retweets,replies'
-          }
-        }
-      );
 
-      const tweets = tweetsResponse.data.data || [];
-      console.log(`✅ Found ${tweets.length} real tweets from ${username}`);
-      
+      // Get user's tweets
+      const tweetsUrl = `https://api.twitter.com/2/users/${userId}/tweets`;
+      const tweetsResponse = await this.makeTwitterRequest(tweetsUrl, 'GET', {
+        'max_results': Math.min(maxTweets, 100),
+        'tweet.fields': 'created_at,author_id,text,public_metrics',
+        'exclude': 'retweets,replies'
+      });
+
+      const tweets = tweetsResponse.data || [];
+      console.log(`✅ Found ${tweets.length} tweets from ${username}`);
+
       return tweets.map(tweet => ({
         id: tweet.id,
         text: tweet.text,
@@ -92,48 +134,35 @@ export class TwitterService {
       }));
 
     } catch (error) {
-      console.error('❌ Error fetching user tweets:', error.response?.data || error.message);
-      throw new Error(`Failed to fetch tweets: ${error.response?.data?.detail || error.message}`);
+      console.error('❌ Error fetching user tweets:', error.message);
+      throw new Error(`Failed to fetch tweets for @${username}: ${error.message}`);
     }
   }
 
-  static async getFollowedUsersTweets(sourceAccount, maxTweets = 50) {
+  static async getFollowedUsersTweets(sourceAccount, maxTweets = 10) {
     try {
       console.log(`🐦 Fetching tweets from account: ${sourceAccount}`);
-      
-      // Get tweets from the source account itself (real implementation)
       const tweets = await this.getUserTweets(sourceAccount, maxTweets);
-      
-      console.log(`✅ Found ${tweets.length} real tweets`);
+      console.log(`✅ Found ${tweets.length} tweets`);
       return tweets;
-      
     } catch (error) {
       console.error('❌ Error fetching followed users tweets:', error.message);
-      throw error; // Don't fall back to mock data
+      throw error;
     }
   }
 
-  static async searchTweets(query, maxTweets = 50) {
+  static async searchTweets(query, maxTweets = 10) {
     try {
-      const bearerToken = await this.getBearerToken();
-      
-      const response = await axios.get(
-        'https://api.twitter.com/2/tweets/search/recent',
-        {
-          headers: {
-            'Authorization': `Bearer ${bearerToken}`
-          },
-          params: {
-            'query': query,
-            'max_results': maxTweets,
-            'tweet.fields': 'created_at,author_id,text,public_metrics'
-          }
-        }
-      );
+      const searchUrl = 'https://api.twitter.com/2/tweets/search/recent';
+      const response = await this.makeTwitterRequest(searchUrl, 'GET', {
+        'query': query,
+        'max_results': Math.min(maxTweets, 100),
+        'tweet.fields': 'created_at,author_id,text,public_metrics'
+      });
 
-      const tweets = response.data.data || [];
+      const tweets = response.data || [];
       console.log(`✅ Found ${tweets.length} tweets for query: ${query}`);
-      
+
       return tweets.map(tweet => ({
         id: tweet.id,
         text: tweet.text,
@@ -145,7 +174,7 @@ export class TwitterService {
       }));
 
     } catch (error) {
-      console.error('❌ Error searching tweets:', error.response?.data || error.message);
+      console.error('❌ Error searching tweets:', error.message);
       throw error;
     }
   }
@@ -156,26 +185,46 @@ export class TwitterService {
     }
 
     try {
-      const bearerToken = await this.getBearerToken();
-      const response = await axios.get(
-        'https://api.twitter.com/2/users/me',
-        {
-          headers: {
-            'Authorization': `Bearer ${bearerToken}`
-          }
-        }
-      );
-
+      // Test by getting the authenticated user's profile
+      const meUrl = 'https://api.twitter.com/2/users/me';
+      const response = await this.makeTwitterRequest(meUrl);
+      
       console.log('✅ Twitter API connection successful');
       return { 
         success: true, 
-        username: response.data.data.username,
-        id: response.data.data.id
+        username: response.data.username,
+        id: response.data.id,
+        name: response.data.name
       };
-      
+
     } catch (error) {
-      console.error('❌ Twitter API connection failed:', error.response?.data || error.message);
-      throw new Error(`Twitter API connection failed: ${error.response?.data?.detail || error.message}`);
+      console.error('❌ Twitter API connection failed:', error.message);
+      throw new Error(`Twitter API connection failed: ${error.message}`);
+    }
+  }
+
+  // Alternative method to verify account existence without full authentication
+  static async verifyAccountExists(username) {
+    try {
+      const cleanUsername = username.replace('@', '').trim();
+      console.log(`🔍 Verifying account existence: @${cleanUsername}`);
+      
+      const userUrl = `https://api.twitter.com/2/users/by/username/${cleanUsername}`;
+      const response = await this.makeTwitterRequest(userUrl);
+      
+      if (response.data) {
+        return {
+          exists: true,
+          username: response.data.username,
+          id: response.data.id,
+          name: response.data.name
+        };
+      } else {
+        return { exists: false };
+      }
+    } catch (error) {
+      console.error('❌ Error verifying account:', error.message);
+      return { exists: false, error: error.message };
     }
   }
 }
