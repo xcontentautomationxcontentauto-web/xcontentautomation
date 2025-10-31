@@ -1,160 +1,96 @@
 import axios from 'axios';
-import OAuth from 'oauth-1.0a';
+
+// Netlify Dev automatically handles the URL routing
+// It works for both:
+// - Local: http://localhost:3000/.netlify/functions/twitter-proxy
+// - Production: https://xcontentautomation.netlify.app/.netlify/functions/twitter-proxy
+const PROXY_URL = '/.netlify/functions/twitter-proxy';
 
 export class TwitterService {
-  static client = null;
-  static oauth = null;
+  static credentials = null;
 
   static initializeClient(credentials) {
-    if (!credentials.consumerKey || !credentials.consumerSecret) {
-      throw new Error('Missing Twitter API credentials');
+    this.credentials = {
+      consumerKey: credentials.consumerKey?.trim(),
+      consumerSecret: credentials.consumerSecret?.trim(),
+      accessToken: credentials.accessToken?.trim(),
+      accessTokenSecret: credentials.accessTokenSecret?.trim()
+    };
+    console.log('🔑 Twitter client initialized');
+  }
+
+  static async makeProxyRequest(action, data = {}) {
+    if (!this.credentials) {
+      throw new Error('Twitter client not initialized. Please enter your API credentials.');
     }
 
-    // Store credentials for API calls
-    this.client = {
-      consumerKey: credentials.consumerKey,
-      consumerSecret: credentials.consumerSecret,
-      accessToken: credentials.accessToken,
-      accessTokenSecret: credentials.accessTokenSecret
-    };
-
-    // Initialize OAuth 1.0a with browser-compatible crypto
-    this.oauth = OAuth({
-      consumer: {
-        key: credentials.consumerKey,
-        secret: credentials.consumerSecret
-      },
-      signature_method: 'HMAC-SHA1',
-      hash_function: (base_string, key) => {
-        // Browser-compatible HMAC-SHA1 implementation
-        return this.browserHmacSha1(base_string, key);
-      }
-    });
-  }
-
-  // Browser-compatible HMAC-SHA1 implementation
-  static async browserHmacSha1(base_string, key) {
-    // Convert string to ArrayBuffer
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(key);
-    const messageData = encoder.encode(base_string);
-
-    // Import key for HMAC
-    const cryptoKey = await window.crypto.subtle.importKey(
-      'raw',
-      keyData,
-      { name: 'HMAC', hash: 'SHA-1' },
-      false,
-      ['sign']
-    );
-
-    // Sign the message
-    const signature = await window.crypto.subtle.sign(
-      'HMAC',
-      cryptoKey,
-      messageData
-    );
-
-    // Convert ArrayBuffer to base64
-    const signatureArray = new Uint8Array(signature);
-    const signatureBase64 = btoa(String.fromCharCode(...signatureArray));
-    
-    return signatureBase64;
-  }
-
-  static getAuthHeaders(url, method = 'GET') {
-    if (!this.oauth || !this.client) {
-      throw new Error('Twitter client not initialized');
-    }
-
-    const token = {
-      key: this.client.accessToken,
-      secret: this.client.accessTokenSecret
-    };
-
-    const requestData = {
-      url: url,
-      method: method
-    };
-
-    return this.oauth.toHeader(this.oauth.authorize(requestData, token));
-  }
-
-  static async makeTwitterRequest(url, method = 'GET', params = {}) {
     try {
-      const headers = this.getAuthHeaders(url, method);
-      
-      const config = {
-        method: method,
-        url: url,
-        headers: {
-          ...headers,
-          'Content-Type': 'application/json'
-        }
-      };
+      console.log(`🔍 Making Twitter proxy request: ${action}`, data);
 
-      if (method === 'GET' && Object.keys(params).length > 0) {
-        config.params = params;
+      const response = await axios.post(PROXY_URL, {
+        ...this.credentials,
+        action,
+        ...data
+      }, {
+        timeout: 15000 // 15 second timeout
+      });
+
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Unknown proxy error');
       }
 
-      console.log(`🔍 Making Twitter API request to: ${url}`);
-      const response = await axios(config);
-      
       return response.data;
+
     } catch (error) {
-      console.error('❌ Twitter API request failed:', {
-        url: url,
-        method: method,
-        error: error.response?.data || error.message,
-        status: error.response?.status
+      console.error('❌ Twitter proxy request failed:', {
+        action,
+        error: error.response?.data || error.message
       });
+      
+      // Provide helpful error messages
+      let errorMessage = error.response?.data?.error || error.message;
+      
+      if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
+        errorMessage = 'Cannot connect to Twitter service. Make sure you are running with "npm run dev" (not "npm run dev:vite").';
+      }
       
       if (error.response?.status === 401) {
-        throw new Error('Invalid Twitter API credentials. Please check your Consumer Key, Consumer Secret, Access Token, and Access Token Secret.');
-      } else if (error.response?.status === 403) {
-        throw new Error('Twitter API access forbidden. Please check your app permissions in the Twitter Developer Portal.');
-      } else if (error.response?.status === 429) {
-        throw new Error('Twitter API rate limit exceeded. Please try again later.');
-      } else if (error.response?.data) {
-        const twitterError = error.response.data;
-        throw new Error(`Twitter API error: ${twitterError.detail || twitterError.title || 'Unknown error'}`);
-      } else {
-        throw new Error(`Twitter API request failed: ${error.message}`);
+        errorMessage = 'Invalid Twitter API credentials. Please check your Consumer Key, Consumer Secret, Access Token, and Access Token Secret.';
       }
+      
+      throw new Error(errorMessage);
     }
   }
 
-  // ... rest of your methods remain the same
-  static async getUserTweets(username, maxTweets = 10) {
+  static async testConnection() {
     try {
-      console.log(`🔍 Fetching tweets for user: ${username}`);
+      const result = await this.makeProxyRequest('test-connection');
+      console.log('✅ Twitter API connection successful:', result.data);
+      return {
+        success: true,
+        username: result.data.username,
+        id: result.data.id,
+        name: result.data.name
+      };
+    } catch (error) {
+      console.error('❌ Twitter API connection failed:', error.message);
+      throw new Error(`Twitter API connection failed: ${error.message}`);
+    }
+  }
 
-      // Get user ID first
-      const userUrl = `https://api.twitter.com/2/users/by/username/${username.replace('@', '')}`;
-      const userResponse = await this.makeTwitterRequest(userUrl);
-
-      if (!userResponse.data) {
-        throw new Error(`User @${username} not found`);
-      }
-
-      const userId = userResponse.data.id;
-      console.log(`✅ Found user ID: ${userId}`);
-
-      // Get user's tweets
-      const tweetsUrl = `https://api.twitter.com/2/users/${userId}/tweets`;
-      const tweetsResponse = await this.makeTwitterRequest(tweetsUrl, 'GET', {
-        'max_results': Math.min(maxTweets, 100),
-        'tweet.fields': 'created_at,author_id,text,public_metrics',
-        'exclude': 'retweets,replies'
+  static async getUserTweets(username, maxTweets = 5) {
+    try {
+      const result = await this.makeProxyRequest('get-user-tweets', { 
+        username
       });
-
-      const tweets = tweetsResponse.data || [];
+      
+      const tweets = result.data.tweets || [];
       console.log(`✅ Found ${tweets.length} tweets from ${username}`);
 
       return tweets.map(tweet => ({
         id: tweet.id,
         text: tweet.text,
-        author_id: tweet.author_id,
+        author_id: result.data.user.id,
         created_at: tweet.created_at,
         source: 'X/Twitter',
         type: 'tweet',
@@ -167,27 +103,27 @@ export class TwitterService {
     }
   }
 
-  static async testConnection() {
-    if (!this.client) {
-      throw new Error('Twitter client not initialized');
-    }
+  static async getFollowedUsersTweets(sourceAccount, maxTweets = 5) {
+    return this.getUserTweets(sourceAccount, maxTweets);
+  }
 
+  static async searchTweets(query, maxTweets = 5) {
+    throw new Error('Search functionality not implemented yet');
+  }
+
+  static async verifyAccountExists(username) {
     try {
-      // Test by getting the authenticated user's profile
-      const meUrl = 'https://api.twitter.com/2/users/me';
-      const response = await this.makeTwitterRequest(meUrl);
-      
-      console.log('✅ Twitter API connection successful');
-      return { 
-        success: true, 
-        username: response.data.username,
-        id: response.data.id,
-        name: response.data.name
+      const tweets = await this.getUserTweets(username, 1);
+      return {
+        exists: true,
+        username: username,
+        hasTweets: tweets.length > 0
       };
-
     } catch (error) {
-      console.error('❌ Twitter API connection failed:', error.message);
-      throw new Error(`Twitter API connection failed: ${error.message}`);
+      return {
+        exists: false,
+        error: error.message
+      };
     }
   }
 }
