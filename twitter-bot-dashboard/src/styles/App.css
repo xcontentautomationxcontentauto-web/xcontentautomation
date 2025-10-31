@@ -1928,168 +1928,235 @@ select:focus-visible {
 
 
 
-/* Enhanced Verification Status Styles */
-.verification-status {
-  margin: 1rem 0;
-  padding: 1rem;
-  border-radius: 8px;
-  border-left: 4px solid;
-}
 
-.verification-status.success {
-  background: rgba(34, 197, 94, 0.1);
-  border-left-color: #22c55e;
-}
 
-.verification-status.error {
-  background: rgba(239, 68, 68, 0.1);
-  border-left-color: #ef4444;
-}
+import axios from 'axios';
+import OAuth from 'oauth-1.0a';
+import crypto from 'crypto';
 
-.verification-status.warning {
-  background: rgba(245, 158, 11, 0.1);
-  border-left-color: #f59e0b;
-}
+export class TwitterService {
+  static client = null;
+  static oauth = null;
 
-.verification-status.info {
-  background: rgba(59, 130, 246, 0.1);
-  border-left-color: #3b82f6;
-}
+  static initializeClient(credentials) {
+    if (!credentials.consumerKey || !credentials.consumerSecret) {
+      throw new Error('Missing Twitter API credentials');
+    }
 
-.verification-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
+    // Store credentials for API calls
+    this.client = {
+      consumerKey: credentials.consumerKey,
+      consumerSecret: credentials.consumerSecret,
+      accessToken: credentials.accessToken,
+      accessTokenSecret: credentials.accessTokenSecret
+    };
 
-.btn-clear {
-  background: none;
-  border: none;
-  color: inherit;
-  cursor: pointer;
-  font-size: 1.2rem;
-  padding: 0.25rem;
-  border-radius: 4px;
-}
+    // Initialize OAuth 1.0a
+    this.oauth = OAuth({
+      consumer: {
+        key: credentials.consumerKey,
+        secret: credentials.consumerSecret
+      },
+      signature_method: 'HMAC-SHA1',
+      hash_function(base_string, key) {
+        return crypto
+          .createHmac('sha1', key)
+          .update(base_string)
+          .digest('base64');
+      }
+    });
+  }
 
-.btn-clear:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
+  static getAuthHeaders(url, method = 'GET') {
+    if (!this.oauth || !this.client) {
+      throw new Error('Twitter client not initialized');
+    }
 
-.verification-details {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
-}
+    const token = {
+      key: this.client.accessToken,
+      secret: this.client.accessTokenSecret
+    };
 
-.verification-item {
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
+    const requestData = {
+      url: url,
+      method: method
+    };
 
-.verification-item:last-child {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
+    return this.oauth.toHeader(this.oauth.authorize(requestData, token));
+  }
 
-.verification-data {
-  margin-left: 1rem;
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.5rem;
-  border-radius: 4px;
-}
+  static async makeTwitterRequest(url, method = 'GET', params = {}) {
+    try {
+      const headers = this.getAuthHeaders(url, method);
+      
+      const config = {
+        method: method,
+        url: url,
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json'
+        }
+      };
 
-.verification-error {
-  margin-left: 1rem;
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
-  padding: 0.5rem;
-  border-radius: 4px;
-}
+      if (method === 'GET' && Object.keys(params).length > 0) {
+        config.params = params;
+      }
 
-/* Connection Status Styles */
-.connection-status {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #4e4e4eff;
-  border-radius: 8px;
-}
+      console.log(`🔍 Making Twitter API request to: ${url}`);
+      const response = await axios(config);
+      
+      return response.data;
+    } catch (error) {
+      console.error('❌ Twitter API request failed:', {
+        url: url,
+        method: method,
+        error: error.response?.data || error.message,
+        status: error.response?.status
+      });
+      
+      if (error.response?.status === 401) {
+        throw new Error('Invalid Twitter API credentials. Please check your Consumer Key, Consumer Secret, Access Token, and Access Token Secret.');
+      } else if (error.response?.status === 403) {
+        throw new Error('Twitter API access forbidden. Please check your app permissions in the Twitter Developer Portal.');
+      } else if (error.response?.status === 429) {
+        throw new Error('Twitter API rate limit exceeded. Please try again later.');
+      } else if (error.response?.data) {
+        const twitterError = error.response.data;
+        throw new Error(`Twitter API error: ${twitterError.detail || twitterError.title || 'Unknown error'}`);
+      } else {
+        throw new Error(`Twitter API request failed: ${error.message}`);
+      }
+    }
+  }
 
-.status-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
+  static async getUserTweets(username, maxTweets = 10) {
+    try {
+      console.log(`🔍 Fetching tweets for user: ${username}`);
 
-.status-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-}
+      // Get user ID first
+      const userUrl = `https://api.twitter.com/2/users/by/username/${username.replace('@', '')}`;
+      const userResponse = await this.makeTwitterRequest(userUrl);
 
-.status-item .success {
-  color: #22c55e;
-}
+      if (!userResponse.data) {
+        throw new Error(`User @${username} not found`);
+      }
 
-.status-item .error {
-  color: #ef4444;
-}
+      const userId = userResponse.data.id;
+      console.log(`✅ Found user ID: ${userId}`);
 
-.status-item .warning {
-  color: #f59e0b;
-}
+      // Get user's tweets
+      const tweetsUrl = `https://api.twitter.com/2/users/${userId}/tweets`;
+      const tweetsResponse = await this.makeTwitterRequest(tweetsUrl, 'GET', {
+        'max_results': Math.min(maxTweets, 100),
+        'tweet.fields': 'created_at,author_id,text,public_metrics',
+        'exclude': 'retweets,replies'
+      });
 
-/* Toggle Switch Styles */
-.toggle-label {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  cursor: pointer;
-  user-select: none;
-}
+      const tweets = tweetsResponse.data || [];
+      console.log(`✅ Found ${tweets.length} tweets from ${username}`);
 
-.toggle-slider {
-  position: relative;
-  width: 50px;
-  height: 24px;
-  background: #ccc;
-  border-radius: 24px;
-  transition: background 0.3s;
-}
+      return tweets.map(tweet => ({
+        id: tweet.id,
+        text: tweet.text,
+        author_id: tweet.author_id,
+        created_at: tweet.created_at,
+        source: 'X/Twitter',
+        type: 'tweet',
+        metrics: tweet.public_metrics
+      }));
 
-.toggle-slider:before {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  background: white;
-  border-radius: 50%;
-  top: 2px;
-  left: 2px;
-  transition: transform 0.3s;
-}
+    } catch (error) {
+      console.error('❌ Error fetching user tweets:', error.message);
+      throw new Error(`Failed to fetch tweets for @${username}: ${error.message}`);
+    }
+  }
 
-.toggle-label input {
-  display: none;
-}
+  static async getFollowedUsersTweets(sourceAccount, maxTweets = 10) {
+    try {
+      console.log(`🐦 Fetching tweets from account: ${sourceAccount}`);
+      const tweets = await this.getUserTweets(sourceAccount, maxTweets);
+      console.log(`✅ Found ${tweets.length} tweets`);
+      return tweets;
+    } catch (error) {
+      console.error('❌ Error fetching followed users tweets:', error.message);
+      throw error;
+    }
+  }
 
-.toggle-label input:checked + .toggle-slider {
-  background: #1da1f2;
-}
+  static async searchTweets(query, maxTweets = 10) {
+    try {
+      const searchUrl = 'https://api.twitter.com/2/tweets/search/recent';
+      const response = await this.makeTwitterRequest(searchUrl, 'GET', {
+        'query': query,
+        'max_results': Math.min(maxTweets, 100),
+        'tweet.fields': 'created_at,author_id,text,public_metrics'
+      });
 
-.toggle-label input:checked + .toggle-slider:before {
-  transform: translateX(26px);
+      const tweets = response.data || [];
+      console.log(`✅ Found ${tweets.length} tweets for query: ${query}`);
+
+      return tweets.map(tweet => ({
+        id: tweet.id,
+        text: tweet.text,
+        author_id: tweet.author_id,
+        created_at: tweet.created_at,
+        source: 'X/Twitter Search',
+        type: 'tweet',
+        metrics: tweet.public_metrics
+      }));
+
+    } catch (error) {
+      console.error('❌ Error searching tweets:', error.message);
+      throw error;
+    }
+  }
+
+  static async testConnection() {
+    if (!this.client) {
+      throw new Error('Twitter client not initialized');
+    }
+
+    try {
+      // Test by getting the authenticated user's profile
+      const meUrl = 'https://api.twitter.com/2/users/me';
+      const response = await this.makeTwitterRequest(meUrl);
+      
+      console.log('✅ Twitter API connection successful');
+      return { 
+        success: true, 
+        username: response.data.username,
+        id: response.data.id,
+        name: response.data.name
+      };
+
+    } catch (error) {
+      console.error('❌ Twitter API connection failed:', error.message);
+      throw new Error(`Twitter API connection failed: ${error.message}`);
+    }
+  }
+
+  // Alternative method to verify account existence without full authentication
+  static async verifyAccountExists(username) {
+    try {
+      const cleanUsername = username.replace('@', '').trim();
+      console.log(`🔍 Verifying account existence: @${cleanUsername}`);
+      
+      const userUrl = `https://api.twitter.com/2/users/by/username/${cleanUsername}`;
+      const response = await this.makeTwitterRequest(userUrl);
+      
+      if (response.data) {
+        return {
+          exists: true,
+          username: response.data.username,
+          id: response.data.id,
+          name: response.data.name
+        };
+      } else {
+        return { exists: false };
+      }
+    } catch (error) {
+      console.error('❌ Error verifying account:', error.message);
+      return { exists: false, error: error.message };
+    }
+  }
 }
