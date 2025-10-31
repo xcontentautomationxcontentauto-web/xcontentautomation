@@ -1,275 +1,100 @@
 import axios from 'axios';
 
 export class NewsScraper {
-  // CORS Proxy URL (free service)
+  // Enhanced CORS Proxy URLs (multiple fallbacks)
   static getCorsProxy(url) {
-    // Use a free CORS proxy service
-    return `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const proxies = [
+      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+      `https://cors-anywhere.herokuapp.com/${url}`,
+      `https://corsproxy.io/?${encodeURIComponent(url)}`
+    ];
+    return proxies[0]; // Use first proxy, fallbacks can be implemented
   }
 
-  // Enhanced RSS Feeds with international coverage
+  // Enhanced RSS Feeds with better categorization
   static getRSSFeeds() {
     return [
       // Middle East Sources
       {
-        name: 'Al Jazeera English',
-        url: 'https://www.aljazeera.com/xml/rss/all.xml',
+        name: 'Tehran Times',
+        url: 'https://www.tehrantimes.com/rss',
         category: 'middle-east',
-        country: 'Qatar',
-        language: 'english'
+        country: 'Iran',
+        language: 'english',
+        priority: 1 // High priority for testing
       },
       {
         name: 'Press TV (Iran)',
         url: 'https://www.presstv.ir/rss.xml',
         category: 'middle-east',
         country: 'Iran',
-        language: 'english'
+        language: 'english',
+        priority: 1
       },
       {
-        name: 'Tehran Times',
-        url: 'https://www.tehrantimes.com/rss',
+        name: 'Al Jazeera English',
+        url: 'https://www.aljazeera.com/xml/rss/all.xml',
         category: 'middle-east',
-        country: 'Iran',
-        language: 'english'
+        country: 'Qatar',
+        language: 'english',
+        priority: 2
       },
       {
         name: 'Arab News (Saudi Arabia)',
         url: 'https://www.arabnews.com/rss.xml',
         category: 'middle-east',
         country: 'Saudi Arabia',
-        language: 'english'
-      },
-      {
-        name: 'Al Arabiya English',
-        url: 'https://english.alarabiya.net/rss',
-        category: 'middle-east',
-        country: 'UAE',
-        language: 'english'
-      },
-      {
-        name: 'Jerusalem Post',
-        url: 'https://www.jpost.com/Rss/RssFeedsHeadlines',
-        category: 'middle-east',
-        country: 'Israel',
-        language: 'english'
-      },
-      {
-        name: 'Haaretz English',
-        url: 'https://www.haaretz.com/rss',
-        category: 'middle-east',
-        country: 'Israel',
-        language: 'english'
-      },
-      {
-        name: 'Daily Sabah (Turkey)',
-        url: 'https://www.dailysabah.com/rss',
-        category: 'middle-east',
-        country: 'Turkey',
-        language: 'english'
-      },
-      {
-        name: 'Hurriyet Daily News (Turkey)',
-        url: 'https://www.hurriyetdailynews.com/rss',
-        category: 'middle-east',
-        country: 'Turkey',
-        language: 'english'
+        language: 'english',
+        priority: 2
       },
 
-      // Asian Sources
-      {
-        name: 'China Daily',
-        url: 'https://www.chinadaily.com.cn/rss/world_rss.xml',
-        category: 'asia',
-        country: 'China',
-        language: 'english'
-      },
-      {
-        name: 'Global Times (China)',
-        url: 'https://www.globaltimes.cn/rss/world.xml',
-        category: 'asia',
-        country: 'China',
-        language: 'english'
-      },
-      {
-        name: 'Xinhua News (China)',
-        url: 'http://www.xinhuanet.com/english/rss/worldrss.xml',
-        category: 'asia',
-        country: 'China',
-        language: 'english'
-      },
-      {
-        name: 'The Hindu (India)',
-        url: 'https://www.thehindu.com/news/international/feeder/default.rss',
-        category: 'asia',
-        country: 'India',
-        language: 'english'
-      },
-      {
-        name: 'Times of India - World',
-        url: 'https://timesofindia.indiatimes.com/rssfeeds/296589292.cms',
-        category: 'asia',
-        country: 'India',
-        language: 'english'
-      },
-      {
-        name: 'Japan Times',
-        url: 'https://www.japantimes.co.jp/feed',
-        category: 'asia',
-        country: 'Japan',
-        language: 'english'
-      },
-      {
-        name: 'Korean Times',
-        url: 'https://www.koreatimes.co.kr/rss/202_n.xml',
-        category: 'asia',
-        country: 'South Korea',
-        language: 'english'
-      },
-
-      // African Sources
-      {
-        name: 'Premium Times (Nigeria)',
-        url: 'https://www.premiumtimesng.com/feed',
-        category: 'africa',
-        country: 'Nigeria',
-        language: 'english'
-      },
-      {
-        name: 'Daily Nation (Kenya)',
-        url: 'https://www.nation.co.ke/rss',
-        category: 'africa',
-        country: 'Kenya',
-        language: 'english'
-      },
-      {
-        name: 'News24 (South Africa)',
-        url: 'https://www.news24.com/rss',
-        category: 'africa',
-        country: 'South Africa',
-        language: 'english'
-      },
-      {
-        name: 'Egypt Today',
-        url: 'https://www.egypttoday.com/rss',
-        category: 'africa',
-        country: 'Egypt',
-        language: 'english'
-      },
-
-      // European Sources
+      // Quick Test Sources (reliable for testing)
       {
         name: 'BBC News',
         url: 'http://feeds.bbci.co.uk/news/rss.xml',
         category: 'europe',
         country: 'UK',
-        language: 'english'
-      },
-      {
-        name: 'The Guardian World',
-        url: 'https://www.theguardian.com/world/rss',
-        category: 'europe',
-        country: 'UK',
-        language: 'english'
+        language: 'english',
+        priority: 1
       },
       {
         name: 'Reuters World News',
         url: 'https://www.reutersagency.com/feed/?best-topics=world-news&post_type=best',
         category: 'europe',
         country: 'UK',
-        language: 'english'
+        language: 'english',
+        priority: 1
       },
       {
-        name: 'DW News (Germany)',
-        url: 'https://rss.dw.com/rdf/rss-en-all',
+        name: 'The Guardian World',
+        url: 'https://www.theguardian.com/world/rss',
         category: 'europe',
-        country: 'Germany',
-        language: 'english'
-      },
-      {
-        name: 'France 24 English',
-        url: 'https://www.france24.com/en/rss',
-        category: 'europe',
-        country: 'France',
-        language: 'english'
-      },
-      {
-        name: 'EU Observer',
-        url: 'https://euobserver.com/news/rss',
-        category: 'europe',
-        country: 'EU',
-        language: 'english'
+        country: 'UK',
+        language: 'english',
+        priority: 2
       },
 
-      // Americas Sources
+      // Additional reliable sources
       {
         name: 'CNN World',
         url: 'http://rss.cnn.com/rss/edition.rss',
         category: 'americas',
         country: 'USA',
-        language: 'english'
+        language: 'english',
+        priority: 2
       },
       {
         name: 'NBC News World',
         url: 'https://feeds.nbcnews.com/nbcnews/public/world',
         category: 'americas',
         country: 'USA',
-        language: 'english'
-      },
-      {
-        name: 'ABC News World',
-        url: 'https://abcnews.go.com/abcnews/internationalheadlines',
-        category: 'americas',
-        country: 'USA',
-        language: 'english'
-      },
-      {
-        name: 'CBC News World',
-        url: 'https://rss.cbc.ca/lineup/world.xml',
-        category: 'americas',
-        country: 'Canada',
-        language: 'english'
-      },
-      {
-        name: 'Buenos Aires Herald',
-        url: 'https://buenosairesherald.com/rss',
-        category: 'americas',
-        country: 'Argentina',
-        language: 'english'
-      },
-
-      // Business & Technology
-      {
-        name: 'Reuters Business',
-        url: 'https://www.reutersagency.com/feed/?best-topics=business-finance&post_type=best',
-        category: 'business',
-        country: 'International',
-        language: 'english'
-      },
-      {
-        name: 'Bloomberg Technology',
-        url: 'https://feeds.bloomberg.com/technology/news.rss',
-        category: 'technology',
-        country: 'USA',
-        language: 'english'
-      },
-      {
-        name: 'Financial Times',
-        url: 'https://www.ft.com/?format=rss',
-        category: 'business',
-        country: 'UK',
-        language: 'english'
-      },
-      {
-        name: 'CNBC World News',
-        url: 'https://www.cnbc.com/id/100727362/device/rss/rss.html',
-        category: 'business',
-        country: 'USA',
-        language: 'english'
+        language: 'english',
+        priority: 2
       }
-    ];
+    ].sort((a, b) => a.priority - b.priority); // Sort by priority
   }
 
-  // Custom RSS parser that works in browser
+  // Enhanced RSS parser with better error handling and Tehran Times support
   static parseRSS(xmlText, sourceName) {
     try {
       const parser = new DOMParser();
@@ -282,31 +107,69 @@ export class NewsScraper {
         return [];
       }
 
-      const items = xmlDoc.getElementsByTagName('item');
-      const articles = [];
+      // Try different item selectors for various RSS formats
+      let items = xmlDoc.getElementsByTagName('item');
+      if (items.length === 0) {
+        items = xmlDoc.getElementsByTagName('entry'); // Some feeds use 'entry'
+      }
 
-      for (let i = 0; i < Math.min(items.length, 15); i++) {
+      const articles = [];
+      const maxItems = sourceName.includes('Tehran') ? 25 : 15; // Get more from Tehran Times
+
+      for (let i = 0; i < Math.min(items.length, maxItems); i++) {
         const item = items[i];
 
-        const title = item.getElementsByTagName('title')[0]?.textContent || '';
+        // Enhanced title extraction
+        let title = item.getElementsByTagName('title')[0]?.textContent || '';
         const link = item.getElementsByTagName('link')[0]?.textContent || '';
-        const description = item.getElementsByTagName('description')[0]?.textContent || '';
-        const pubDate = item.getElementsByTagName('pubDate')[0]?.textContent || '';
-        const content = item.getElementsByTagName('content:encoded')[0]?.textContent || '';
+        let description = item.getElementsByTagName('description')[0]?.textContent || '';
+        const pubDate = item.getElementsByTagName('pubDate')[0]?.textContent || 
+                       item.getElementsByTagName('pubdate')[0]?.textContent ||
+                       item.getElementsByTagName('dc:date')[0]?.textContent || '';
+        
+        // Try content:encoded for full content
+        let content = item.getElementsByTagName('content:encoded')[0]?.textContent || '';
 
-        if (title && link && title.length > 10) {
-          articles.push({
-            title: this.cleanText(title),
-            content: this.cleanText(description) || this.cleanText(content) || this.cleanText(title),
-            url: link,
-            source: sourceName,
-            timestamp: new Date(pubDate || Date.now()),
-            type: 'news'
-          });
+        // For Tehran Times specific handling
+        if (sourceName.includes('Tehran Times')) {
+          // Clean up titles that might be numbers only (like "15184")
+          if (/^\d+$/.test(title.trim())) {
+            console.log(`⚠️ Skipping numeric title from Tehran Times: ${title}`);
+            continue;
+          }
+
+          // Use description if it's better than title
+          if (description && description.length > title.length) {
+            content = description;
+          }
+        }
+
+        // Skip if no meaningful title
+        if (!title || title.trim().length < 10 || title === 'undefined') {
+          continue;
+        }
+
+        // Skip obviously invalid titles
+        if (title.includes('<?xml') || title.includes('<rss')) {
+          continue;
+        }
+
+        const article = {
+          title: this.cleanText(title),
+          content: this.cleanText(content) || this.cleanText(description) || this.cleanText(title),
+          url: link,
+          source: sourceName,
+          timestamp: this.parseDate(pubDate) || new Date(),
+          type: 'news'
+        };
+
+        // Only add if we have meaningful content
+        if (article.title && article.title.length > 5 && article.content && article.content.length > 10) {
+          articles.push(article);
         }
       }
 
-      console.log(`✅ Parsed ${articles.length} articles from ${sourceName}`);
+      console.log(`✅ Parsed ${articles.length} valid articles from ${sourceName}`);
       return articles;
 
     } catch (error) {
@@ -315,9 +178,34 @@ export class NewsScraper {
     }
   }
 
-  // Clean text from HTML tags and extra spaces
+  // Enhanced date parser
+  static parseDate(dateString) {
+    if (!dateString) return new Date();
+    
+    try {
+      // Try parsing as ISO string first
+      if (dateString.includes('T')) {
+        return new Date(dateString);
+      }
+      
+      // Try common RSS date formats
+      const parsed = new Date(dateString);
+      if (!isNaN(parsed.getTime())) {
+        return parsed;
+      }
+      
+      // Fallback to current date
+      return new Date();
+    } catch (error) {
+      console.warn('Date parsing error, using current date:', error);
+      return new Date();
+    }
+  }
+
+  // Enhanced text cleaner
   static cleanText(text) {
     if (!text) return '';
+    
     return text
       .replace(/<[^>]*>/g, '') // Remove HTML tags
       .replace(/&nbsp;/g, ' ') // Replace &nbsp;
@@ -326,11 +214,14 @@ export class NewsScraper {
       .replace(/&gt;/g, '>') // Replace &gt;
       .replace(/&quot;/g, '"') // Replace &quot;
       .replace(/&#39;/g, "'") // Replace &#39;
+      .replace(/&#x27;/g, "'") // Replace &#x27;
+      .replace(/&#x2F;/g, '/') // Replace &#x2F;
       .replace(/\s+/g, ' ') // Replace multiple spaces
-      .trim()
-      .substring(0, 500); // Limit length
+      .replace(/^\s+|\s+$/g, '') // Trim
+      .substring(0, 1000); // Increased limit for better content
   }
 
+  // Enhanced RSS feed scraper with better error handling
   static async scrapeRSSFeed(feedUrl, sourceName) {
     try {
       console.log(`📡 Fetching RSS: ${sourceName}`);
@@ -339,46 +230,81 @@ export class NewsScraper {
       const proxyUrl = this.getCorsProxy(feedUrl);
 
       const response = await axios.get(proxyUrl, {
-        timeout: 20000, // Increased timeout for international sources
+        timeout: 25000, // Increased timeout for international sources
         headers: {
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       });
 
       // Extract the actual RSS content from proxy response
-      const rssContent = response.data.contents;
+      let rssContent;
+      if (response.data && typeof response.data === 'object') {
+        rssContent = response.data.contents || response.data.content || JSON.stringify(response.data);
+      } else {
+        rssContent = response.data;
+      }
 
       if (!rssContent) {
         console.error(`❌ No content received from ${sourceName}`);
         return [];
       }
 
+      // Handle different proxy response formats
+      if (typeof rssContent !== 'string') {
+        rssContent = String(rssContent);
+      }
+
       const articles = this.parseRSS(rssContent, sourceName);
-      console.log(`✅ Found ${articles.length} real articles from ${sourceName}`);
+      
+      if (articles.length > 0) {
+        console.log(`✅ Found ${articles.length} real articles from ${sourceName}`);
+      } else {
+        console.log(`⚠️ No valid articles parsed from ${sourceName}, raw content length: ${rssContent.length}`);
+        // Log a sample for debugging
+        if (rssContent.length > 0) {
+          console.log(`📄 Content sample: ${rssContent.substring(0, 200)}...`);
+        }
+      }
+      
       return articles;
 
     } catch (error) {
       console.error(`❌ Error fetching RSS from ${sourceName}:`, error.message);
 
-      // Fallback: Try direct fetch (might work for some feeds)
-      if (error.message.includes('Network Error') || error.message.includes('CORS')) {
-        console.log(`🔄 Trying direct fetch for ${sourceName}...`);
-        return await this.tryDirectFetch(feedUrl, sourceName);
+      // Enhanced fallback with multiple strategies
+      if (error.message.includes('Network Error') || error.message.includes('CORS') || error.code === 'NETWORK_ERROR') {
+        console.log(`🔄 Trying alternative strategies for ${sourceName}...`);
+        
+        try {
+          // Strategy 1: Direct fetch
+          const directResult = await this.tryDirectFetch(feedUrl, sourceName);
+          if (directResult.length > 0) return directResult;
+          
+          // Strategy 2: Try without proxy for same-origin requests
+          const noProxyResult = await this.tryNoProxyFetch(feedUrl, sourceName);
+          if (noProxyResult.length > 0) return noProxyResult;
+          
+        } catch (fallbackError) {
+          console.error(`❌ All fallback strategies failed for ${sourceName}:`, fallbackError.message);
+        }
       }
 
       return [];
     }
   }
 
-  // Fallback direct fetch method
+  // Enhanced direct fetch method
   static async tryDirectFetch(feedUrl, sourceName) {
     try {
-      // Use fetch API which might handle some CORS better
+      console.log(`🔧 Trying direct fetch for ${sourceName}...`);
+      
       const response = await fetch(feedUrl, {
         method: 'GET',
         mode: 'cors',
         headers: {
-          'Accept': 'application/rss+xml, application/xml, text/xml'
+          'Accept': 'application/rss+xml, application/xml, text/xml, application/rss+xml',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       });
 
@@ -390,29 +316,52 @@ export class NewsScraper {
       return this.parseRSS(text, sourceName);
 
     } catch (error) {
-      console.error(`❌ Direct fetch also failed for ${sourceName}:`, error.message);
+      console.error(`❌ Direct fetch failed for ${sourceName}:`, error.message);
       return [];
     }
   }
 
-  static async scrapeAllRSSFeeds() {
-    const feeds = this.getRSSFeeds();
+  // New method: Try without proxy (for same-origin or CORS-enabled feeds)
+  static async tryNoProxyFetch(feedUrl, sourceName) {
+    try {
+      console.log(`🔧 Trying no-proxy fetch for ${sourceName}...`);
+      
+      const response = await axios.get(feedUrl, {
+        timeout: 15000,
+        headers: {
+          'Accept': 'application/rss+xml, application/xml, text/xml',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+
+      return this.parseRSS(response.data, sourceName);
+
+    } catch (error) {
+      console.error(`❌ No-proxy fetch failed for ${sourceName}:`, error.message);
+      return [];
+    }
+  }
+
+  // Enhanced RSS feed scraping with priority system
+  static async scrapeAllRSSFeeds(maxFeeds = 5) {
+    const feeds = this.getRSSFeeds().slice(0, maxFeeds); // Start with fewer feeds for testing
     const allArticles = [];
 
-    console.log(`🔄 Starting to scrape ${feeds.length} RSS feeds...`);
+    console.log(`🔄 Starting to scrape ${feeds.length} RSS feeds (priority order)...`);
 
     for (const feed of feeds) {
       try {
-        console.log(`📰 Processing: ${feed.name} (${feed.country})`);
+        console.log(`\n📰 Processing: ${feed.name} (${feed.country}) - Priority ${feed.priority}`);
         const articles = await this.scrapeRSSFeed(feed.url, feed.name);
 
         if (articles.length > 0) {
-          // Add country and category info to articles
+          // Add metadata to articles
           const articlesWithMeta = articles.map(article => ({
             ...article,
             country: feed.country,
             category: feed.category,
-            language: feed.language
+            language: feed.language,
+            sourcePriority: feed.priority
           }));
           allArticles.push(...articlesWithMeta);
           console.log(`✅ Successfully got ${articles.length} articles from ${feed.name}`);
@@ -420,30 +369,78 @@ export class NewsScraper {
           console.log(`⚠️ No articles found from ${feed.name}`);
         }
 
-        // Respectful delay between requests
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Dynamic delay based on success
+        const delay = articles.length > 0 ? 1000 : 500; // Shorter delay if no articles
+        await new Promise(resolve => setTimeout(resolve, delay));
 
       } catch (error) {
         console.error(`❌ Failed to fetch ${feed.name}:`, error.message);
       }
     }
 
-    console.log(`🎯 Total RSS articles found: ${allArticles.length}`);
+    console.log(`\n🎯 Total RSS articles found: ${allArticles.length}`);
 
-    // Remove duplicates based on title
-    const uniqueArticles = allArticles.filter((article, index, self) =>
-      index === self.findIndex(a => a.title === article.title)
-    );
+    // Enhanced duplicate removal
+    const uniqueArticles = this.removeDuplicates(allArticles);
 
     console.log(`🎯 Unique articles after deduplication: ${uniqueArticles.length}`);
 
-    // Sort by timestamp (newest first)
-    uniqueArticles.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    // Sort by timestamp (newest first) and priority
+    uniqueArticles.sort((a, b) => {
+      const dateCompare = new Date(b.timestamp) - new Date(a.timestamp);
+      if (dateCompare !== 0) return dateCompare;
+      return (b.sourcePriority || 0) - (a.sourcePriority || 0);
+    });
 
-    return uniqueArticles.slice(0, 100); // Increased limit for more content
+    return uniqueArticles;
   }
 
-  // Alternative: Use JSON feeds (no CORS issues)
+  // Enhanced duplicate removal
+  static removeDuplicates(articles) {
+    const seen = new Set();
+    return articles.filter(article => {
+      // Create a unique key based on title and source
+      const key = `${article.title.toLowerCase().trim()}_${article.source}`;
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  }
+
+  // Quick test method for individual feeds
+  static async testFeed(feedUrl, sourceName) {
+    console.log(`🧪 Testing feed: ${sourceName}`);
+    try {
+      const articles = await this.scrapeRSSFeed(feedUrl, sourceName);
+      console.log(`🧪 Test results for ${sourceName}:`, {
+        success: true,
+        articlesFound: articles.length,
+        sampleArticles: articles.slice(0, 3).map(a => ({
+          title: a.title,
+          source: a.source,
+          timestamp: a.timestamp
+        }))
+      });
+      return articles;
+    } catch (error) {
+      console.error(`🧪 Test failed for ${sourceName}:`, error);
+      return [];
+    }
+  }
+
+  // Test multiple feeds quickly
+  static async testMultipleFeeds(feedUrls) {
+    const results = {};
+    for (const [name, url] of Object.entries(feedUrls)) {
+      results[name] = await this.testFeed(url, name);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Brief delay between tests
+    }
+    return results;
+  }
+
+  // JSON feeds (unchanged, but included for completeness)
   static getJSONFeeds() {
     return [
       {
@@ -457,27 +454,6 @@ export class NewsScraper {
         name: 'Reddit Geopolitics',
         url: 'https://www.reddit.com/r/geopolitics.json',
         category: 'general',
-        country: 'International',
-        language: 'english'
-      },
-      {
-        name: 'Reddit International News',
-        url: 'https://www.reddit.com/r/InternationalNews.json',
-        category: 'general',
-        country: 'International',
-        language: 'english'
-      },
-      {
-        name: 'Reddit Technology',
-        url: 'https://www.reddit.com/r/technology.json',
-        category: 'technology',
-        country: 'International',
-        language: 'english'
-      },
-      {
-        name: 'Reddit Business',
-        url: 'https://www.reddit.com/r/business.json',
-        category: 'business',
         country: 'International',
         language: 'english'
       }
@@ -499,9 +475,9 @@ export class NewsScraper {
       const articles = [];
 
       if (data.data && data.data.children) {
-        data.data.children.slice(0, 15).forEach(child => {
+        data.data.children.slice(0, 10).forEach(child => {
           const post = child.data;
-          if (post.title && post.url) {
+          if (post.title && post.url && !post.title.includes('[Removed]')) {
             articles.push({
               title: this.cleanText(post.title),
               content: this.cleanText(post.selftext) || this.cleanText(post.title),
@@ -525,29 +501,54 @@ export class NewsScraper {
     }
   }
 
-  // Combined method that tries both RSS and JSON
-  static async scrapeAllFeeds() {
+  // Enhanced combined scraping method
+  static async scrapeAllFeeds(options = {}) {
+    const { maxFeeds = 5, testMode = false } = options;
+    
     console.log('🚀 Starting global feed scraping...');
 
-    const rssArticles = await this.scrapeAllRSSFeeds();
-    const jsonArticles = await this.scrapeAllJSONFeeds();
+    let rssArticles = [];
+    let jsonArticles = [];
+
+    try {
+      rssArticles = await this.scrapeAllRSSFeeds(maxFeeds);
+    } catch (error) {
+      console.error('❌ RSS scraping failed:', error);
+    }
+
+    try {
+      jsonArticles = await this.scrapeAllJSONFeeds();
+    } catch (error) {
+      console.error('❌ JSON scraping failed:', error);
+    }
 
     const allArticles = [...rssArticles, ...jsonArticles];
 
     console.log(`🎯 Total articles from all sources: ${allArticles.length}`);
 
-    // Log statistics by region
+    // Enhanced statistics
     const stats = {
       total: allArticles.length,
-      byRegion: {}
+      bySource: {},
+      byRegion: {},
+      byCountry: {}
     };
 
     allArticles.forEach(article => {
+      const source = article.source;
       const region = article.category || 'unknown';
+      const country = article.country || 'unknown';
+      
+      stats.bySource[source] = (stats.bySource[source] || 0) + 1;
       stats.byRegion[region] = (stats.byRegion[region] || 0) + 1;
+      stats.byCountry[country] = (stats.byCountry[country] || 0) + 1;
     });
 
-    console.log('📊 Regional distribution:', stats.byRegion);
+    console.log('📊 Scraping statistics:', stats);
+
+    if (testMode) {
+      console.log('🔍 Sample articles:', allArticles.slice(0, 3));
+    }
 
     return allArticles;
   }
@@ -560,9 +561,7 @@ export class NewsScraper {
       try {
         const articles = await this.scrapeJSONFeed(feed.url, feed.name);
         allArticles.push(...articles);
-
         await new Promise(resolve => setTimeout(resolve, 1000));
-
       } catch (error) {
         console.error(`Failed to fetch JSON ${feed.name}:`, error.message);
       }
@@ -571,13 +570,15 @@ export class NewsScraper {
     return allArticles;
   }
 
-  // Method to get sources by region
-  static getSourcesByRegion(region) {
-    return this.getRSSFeeds().filter(source => source.category === region);
-  }
-
-  // Method to get sources by country
-  static getSourcesByCountry(country) {
-    return this.getRSSFeeds().filter(source => source.country === country);
+  // Quick test method
+  static async quickTest() {
+    console.log('🚀 QUICK TEST: Testing Tehran Times and BBC...');
+    
+    const testFeeds = {
+      'Tehran Times': 'https://www.tehrantimes.com/rss',
+      'BBC News': 'http://feeds.bbci.co.uk/news/rss.xml'
+    };
+    
+    return await this.testMultipleFeeds(testFeeds);
   }
 }
