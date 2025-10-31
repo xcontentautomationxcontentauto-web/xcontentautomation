@@ -1,6 +1,5 @@
 import axios from 'axios';
 import OAuth from 'oauth-1.0a';
-import crypto from 'crypto';
 
 export class TwitterService {
   static client = null;
@@ -19,20 +18,48 @@ export class TwitterService {
       accessTokenSecret: credentials.accessTokenSecret
     };
 
-    // Initialize OAuth 1.0a
+    // Initialize OAuth 1.0a with browser-compatible crypto
     this.oauth = OAuth({
       consumer: {
         key: credentials.consumerKey,
         secret: credentials.consumerSecret
       },
       signature_method: 'HMAC-SHA1',
-      hash_function(base_string, key) {
-        return crypto
-          .createHmac('sha1', key)
-          .update(base_string)
-          .digest('base64');
+      hash_function: (base_string, key) => {
+        // Browser-compatible HMAC-SHA1 implementation
+        return this.browserHmacSha1(base_string, key);
       }
     });
+  }
+
+  // Browser-compatible HMAC-SHA1 implementation
+  static async browserHmacSha1(base_string, key) {
+    // Convert string to ArrayBuffer
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(key);
+    const messageData = encoder.encode(base_string);
+
+    // Import key for HMAC
+    const cryptoKey = await window.crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-1' },
+      false,
+      ['sign']
+    );
+
+    // Sign the message
+    const signature = await window.crypto.subtle.sign(
+      'HMAC',
+      cryptoKey,
+      messageData
+    );
+
+    // Convert ArrayBuffer to base64
+    const signatureArray = new Uint8Array(signature);
+    const signatureBase64 = btoa(String.fromCharCode(...signatureArray));
+    
+    return signatureBase64;
   }
 
   static getAuthHeaders(url, method = 'GET') {
@@ -97,6 +124,7 @@ export class TwitterService {
     }
   }
 
+  // ... rest of your methods remain the same
   static async getUserTweets(username, maxTweets = 10) {
     try {
       console.log(`🔍 Fetching tweets for user: ${username}`);
@@ -139,46 +167,6 @@ export class TwitterService {
     }
   }
 
-  static async getFollowedUsersTweets(sourceAccount, maxTweets = 10) {
-    try {
-      console.log(`🐦 Fetching tweets from account: ${sourceAccount}`);
-      const tweets = await this.getUserTweets(sourceAccount, maxTweets);
-      console.log(`✅ Found ${tweets.length} tweets`);
-      return tweets;
-    } catch (error) {
-      console.error('❌ Error fetching followed users tweets:', error.message);
-      throw error;
-    }
-  }
-
-  static async searchTweets(query, maxTweets = 10) {
-    try {
-      const searchUrl = 'https://api.twitter.com/2/tweets/search/recent';
-      const response = await this.makeTwitterRequest(searchUrl, 'GET', {
-        'query': query,
-        'max_results': Math.min(maxTweets, 100),
-        'tweet.fields': 'created_at,author_id,text,public_metrics'
-      });
-
-      const tweets = response.data || [];
-      console.log(`✅ Found ${tweets.length} tweets for query: ${query}`);
-
-      return tweets.map(tweet => ({
-        id: tweet.id,
-        text: tweet.text,
-        author_id: tweet.author_id,
-        created_at: tweet.created_at,
-        source: 'X/Twitter Search',
-        type: 'tweet',
-        metrics: tweet.public_metrics
-      }));
-
-    } catch (error) {
-      console.error('❌ Error searching tweets:', error.message);
-      throw error;
-    }
-  }
-
   static async testConnection() {
     if (!this.client) {
       throw new Error('Twitter client not initialized');
@@ -200,31 +188,6 @@ export class TwitterService {
     } catch (error) {
       console.error('❌ Twitter API connection failed:', error.message);
       throw new Error(`Twitter API connection failed: ${error.message}`);
-    }
-  }
-
-  // Alternative method to verify account existence without full authentication
-  static async verifyAccountExists(username) {
-    try {
-      const cleanUsername = username.replace('@', '').trim();
-      console.log(`🔍 Verifying account existence: @${cleanUsername}`);
-      
-      const userUrl = `https://api.twitter.com/2/users/by/username/${cleanUsername}`;
-      const response = await this.makeTwitterRequest(userUrl);
-      
-      if (response.data) {
-        return {
-          exists: true,
-          username: response.data.username,
-          id: response.data.id,
-          name: response.data.name
-        };
-      } else {
-        return { exists: false };
-      }
-    } catch (error) {
-      console.error('❌ Error verifying account:', error.message);
-      return { exists: false, error: error.message };
     }
   }
 }
