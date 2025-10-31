@@ -1,10 +1,24 @@
 import axios from 'axios';
 
-// Netlify Dev automatically handles the URL routing
-// It works for both:
-// - Local: http://localhost:3000/.netlify/functions/twitter-proxy
-// - Production: https://xcontentautomation.netlify.app/.netlify/functions/twitter-proxy
-const PROXY_URL = '/.netlify/functions/twitter-proxy';
+// Smart URL detection that works everywhere
+const getProxyUrl = () => {
+  // Check if we're in development with separate servers
+  if (window.location.hostname === 'localhost' && window.location.port === '3000') {
+    return 'http://localhost:9999/.netlify/functions/twitter-proxy';
+  }
+  // Check if we're in development with Vite default port
+  else if (window.location.hostname === 'localhost' && window.location.port === '5173') {
+    return 'http://localhost:9999/.netlify/functions/twitter-proxy';
+  }
+  // Production on Netlify
+  else if (window.location.hostname === 'xcontentautomation.netlify.app') {
+    return '/.netlify/functions/twitter-proxy';
+  }
+  // Default fallback
+  else {
+    return '/.netlify/functions/twitter-proxy';
+  }
+};
 
 export class TwitterService {
   static credentials = null;
@@ -25,14 +39,15 @@ export class TwitterService {
     }
 
     try {
-      console.log(`🔍 Making Twitter proxy request: ${action}`, data);
+      const proxyUrl = getProxyUrl();
+      console.log(`🔍 Making Twitter proxy request to: ${proxyUrl}`, { action });
 
-      const response = await axios.post(PROXY_URL, {
+      const response = await axios.post(proxyUrl, {
         ...this.credentials,
         action,
         ...data
       }, {
-        timeout: 15000 // 15 second timeout
+        timeout: 15000
       });
 
       if (!response.data.success) {
@@ -44,14 +59,14 @@ export class TwitterService {
     } catch (error) {
       console.error('❌ Twitter proxy request failed:', {
         action,
-        error: error.response?.data || error.message
+        error: error.response?.data || error.message,
+        url: getProxyUrl()
       });
       
-      // Provide helpful error messages
       let errorMessage = error.response?.data?.error || error.message;
       
-      if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
-        errorMessage = 'Cannot connect to Twitter service. Make sure you are running with "npm run dev" (not "npm run dev:vite").';
+      if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error') || error.response?.status === 404) {
+        errorMessage = `Cannot connect to Twitter service. Make sure Netlify Functions are running: npx netlify functions:serve`;
       }
       
       if (error.response?.status === 401) {
@@ -109,21 +124,5 @@ export class TwitterService {
 
   static async searchTweets(query, maxTweets = 5) {
     throw new Error('Search functionality not implemented yet');
-  }
-
-  static async verifyAccountExists(username) {
-    try {
-      const tweets = await this.getUserTweets(username, 1);
-      return {
-        exists: true,
-        username: username,
-        hasTweets: tweets.length > 0
-      };
-    } catch (error) {
-      return {
-        exists: false,
-        error: error.message
-      };
-    }
   }
 }
