@@ -1,0 +1,5 @@
+X Bot Manager - System Logs
+Exported: 2025-11-10 13:07:53
+==================================================
+
+2025-11-10 12:07:07 [INFO] Application started successfully

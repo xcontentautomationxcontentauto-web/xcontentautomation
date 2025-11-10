@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "Twitter Bot Manager",
+    "slug": "twitter-bot-manager",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "twitterbot",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.twitterbotmanager"
+    },
+    "android": {
+      "package": "com.yourcompany.twitterbotmanager"
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}

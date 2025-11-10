@@ -1,0 +1,15 @@
+2025-11-10 14:40:58 [INFO] system: Application started successfully
+2025-11-10 14:42:00 [SUCCESS] system: News settings saved
+2025-11-10 14:42:02 [INFO] system: Starting enhanced news scan
+2025-11-10 14:42:03 [INFO] system: Manual news scan started
+2025-11-10 14:42:34 [SUCCESS] system: Scan completed: 0 articles, 0 approved
+2025-11-10 14:42:50 [INFO] system: Starting enhanced news scan
+2025-11-10 14:42:52 [INFO] system: Manual news scan started
+2025-11-10 14:43:25 [SUCCESS] system: News settings saved
+2025-11-10 14:45:01 [SUCCESS] system: Scan completed: 30 articles, 5 approved
+2025-11-10 14:50:58 [INFO] system: Auto-scan triggered
+2025-11-10 14:50:58 [INFO] system: Starting enhanced news scan
+2025-11-10 15:02:36 [INFO] system: Auto-scan triggered
+2025-11-10 15:02:36 [INFO] system: Starting enhanced news scan
+2025-11-10 15:02:36 [INFO] system: Application started successfully
+2025-11-10 15:04:00 [INFO] system: Application closing

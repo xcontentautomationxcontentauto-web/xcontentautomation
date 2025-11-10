@@ -1,0 +1,23 @@
+{
+  "news_settings": {
+    "sources": [
+      "BBC News",
+      "Reuters World News",
+      "Al Jazeera English",
+      "The Guardian World",
+      "Press TV (Iran)",
+      "Tehran Times",
+      "Arab News (Saudi Arabia)",
+      "Jerusalem Post",
+      "Daily Sabah (Turkey)",
+      "China Daily",
+      "The Hindu (India)",
+      "CNN World",
+      "NBC News World",
+      "DW News (Germany)"
+    ],
+    "scan_interval": 5,
+    "max_feeds": 20,
+    "feed_type": "rss"
+  }
+}
