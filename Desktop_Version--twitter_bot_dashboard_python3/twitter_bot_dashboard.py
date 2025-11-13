@@ -19,6 +19,15 @@ import webbrowser
 from PIL import Image, ImageTk
 import sys
 import csv
+import tweepy
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.action_chains import ActionChains
+from bs4 import BeautifulSoup
 
 # Configure enhanced logging
 logging.basicConfig(
@@ -64,6 +73,338 @@ class TwitterAccount:
     consumer_secret: str = ""
     access_token: str = ""
     access_token_secret: str = ""
+    bearer_token: str = ""
+
+class EnhancedTwitterService:
+    def __init__(self):
+        self.accounts = TwitterAccount()
+        self.is_authenticated = False
+        self.last_request_time = 0
+        self.rate_limit_delay = 1.0  # seconds between requests
+        self.api = None
+        self.client = None
+        
+    def initialize_client(self, accounts):
+        """Initialize Twitter client with rate limiting"""
+        self.accounts = accounts
+        try:
+            # Initialize Tweepy Client (Twitter API v2)
+            if accounts.bearer_token:
+                self.client = tweepy.Client(
+                    bearer_token=accounts.bearer_token,
+                    consumer_key=accounts.consumer_key,
+                    consumer_secret=accounts.consumer_secret,
+                    access_token=accounts.access_token,
+                    access_token_secret=accounts.access_token_secret,
+                    wait_on_rate_limit=True
+                )
+            
+            # Also initialize API v1.1 for some operations
+            auth = tweepy.OAuthHandler(accounts.consumer_key, accounts.consumer_secret)
+            auth.set_access_token(accounts.access_token, accounts.access_token_secret)
+            self.api = tweepy.API(auth, wait_on_rate_limit=True)
+            
+            self.is_authenticated = True
+            logging.info("Twitter client initialized successfully with rate limiting")
+            return True
+        except Exception as e:
+            logging.error(f"Failed to initialize Twitter client: {e}")
+            self.is_authenticated = False
+            return False
+    
+    def _rate_limit(self):
+        """Implement rate limiting"""
+        current_time = time.time()
+        time_since_last = current_time - self.last_request_time
+        
+        if time_since_last < self.rate_limit_delay:
+            sleep_time = self.rate_limit_delay - time_since_last
+            time.sleep(sleep_time)
+        
+        self.last_request_time = time.time()
+    
+    def test_connection(self):
+        """Test Twitter API connection with rate limiting"""
+        if not self.is_authenticated:
+            return {"success": False, "error": "Twitter client not initialized"}
+        
+        self._rate_limit()
+        
+        try:
+            # Test API v2 connection
+            if self.client:
+                user = self.client.get_me()
+                if user.data:
+                    return {
+                        "success": True,
+                        "username": user.data.username,
+                        "id": user.data.id,
+                        "name": user.data.name
+                    }
+            
+            # Fallback to API v1.1
+            if self.api:
+                user = self.api.verify_credentials()
+                return {
+                    "success": True,
+                    "username": user.screen_name,
+                    "id": user.id_str,
+                    "name": user.name
+                }
+            
+            return {"success": False, "error": "No valid API connection"}
+            
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+    
+    def get_user_tweets(self, username, max_tweets=5):
+        """Get user tweets with rate limiting"""
+        if not self.is_authenticated:
+            return {"success": False, "error": "Not authenticated"}
+        
+        self._rate_limit()
+        
+        try:
+            tweets = []
+            
+            if self.client:
+                # Get user ID first
+                user_response = self.client.get_user(username=username)
+                if not user_response.data:
+                    return {"success": False, "error": f"User {username} not found"}
+                
+                user_id = user_response.data.id
+                
+                # Get user's tweets
+                tweets_response = self.client.get_users_tweets(
+                    id=user_id,
+                    max_results=max_tweets,
+                    tweet_fields=['created_at', 'public_metrics']
+                )
+                
+                if tweets_response.data:
+                    for tweet in tweets_response.data:
+                        tweets.append({
+                            "id": tweet.id,
+                            "text": tweet.text,
+                            "created_at": tweet.created_at.isoformat(),
+                            "retweet_count": tweet.public_metrics.get('retweet_count', 0),
+                            "like_count": tweet.public_metrics.get('like_count', 0)
+                        })
+            
+            return {
+                "success": True,
+                "tweets": tweets,
+                "user": {
+                    "username": username,
+                    "id": user_id
+                }
+            }
+            
+        except Exception as e:
+            logging.error(f"Error getting user tweets: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def post_tweet(self, content):
+        """Post a tweet with rate limiting"""
+        if not self.is_authenticated:
+            return {"success": False, "error": "Not authenticated"}
+        
+        self._rate_limit()
+        
+        try:
+            if self.client:
+                response = self.client.create_tweet(text=content)
+                if response.data:
+                    return {
+                        "success": True,
+                        "tweet_id": response.data['id'],
+                        "content": content
+                    }
+            elif self.api:
+                tweet = self.api.update_status(content)
+                return {
+                    "success": True,
+                    "tweet_id": tweet.id_str,
+                    "content": content
+                }
+            
+            return {"success": False, "error": "No valid API connection"}
+            
+        except Exception as e:
+            logging.error(f"Error posting tweet: {e}")
+            return {"success": False, "error": str(e)}
+    
+    def retweet(self, tweet_id):
+        """Retweet a tweet"""
+        if not self.is_authenticated:
+            return {"success": False, "error": "Not authenticated"}
+        
+        self._rate_limit()
+        
+        try:
+            if self.client:
+                response = self.client.retweet(tweet_id=tweet_id)
+                if response.data:
+                    return {
+                        "success": True,
+                        "retweet_id": response.data['retweeted'],
+                        "original_tweet_id": tweet_id
+                    }
+            elif self.api:
+                retweet = self.api.retweet(tweet_id)
+                return {
+                    "success": True,
+                    "retweet_id": retweet.id_str,
+                    "original_tweet_id": tweet_id
+                }
+            
+            return {"success": False, "error": "No valid API connection"}
+            
+        except Exception as e:
+            logging.error(f"Error retweeting: {e}")
+            return {"success": False, "error": str(e)}
+
+class NitterScraper:
+    def __init__(self, twitter_service):
+        self.twitter_service = twitter_service
+        self.last_checked_tweets = set()
+        self.driver = None
+        self.setup_driver()
+    
+    def setup_driver(self):
+        """Setup Selenium WebDriver"""
+        try:
+            chrome_options = Options()
+            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--no-sandbox")
+            chrome_options.add_argument("--disable-dev-shm-usage")
+            chrome_options.add_argument("--disable-gpu")
+            chrome_options.add_argument("--window-size=1200,800")
+            chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+            chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            chrome_options.add_experimental_option('useAutomationExtension', False)
+            
+            self.driver = webdriver.Chrome(options=chrome_options)
+            self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+            
+        except Exception as e:
+            logging.error(f"Failed to setup WebDriver: {e}")
+            self.driver = None
+    
+    def scrape_user_tweets(self, username, max_tweets=10):
+        """Scrape tweets from a user using Nitter"""
+        if not self.driver:
+            return []
+        
+        try:
+            url = f"https://nitter.net/{username}"
+            self.driver.get(url)
+            
+            # Wait for tweets to load
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, ".timeline-item"))
+            )
+            
+            tweet_elements = self.driver.find_elements(By.CSS_SELECTOR, ".timeline-item")
+            tweets = []
+            
+            for tweet_element in tweet_elements[:max_tweets]:
+                try:
+                    # Extract tweet content
+                    content_element = tweet_element.find_element(By.CSS_SELECTOR, ".tweet-content")
+                    content = content_element.text
+                    
+                    # Extract tweet time
+                    time_element = tweet_element.find_element(By.CSS_SELECTOR, ".tweet-date a")
+                    time_text = time_element.get_attribute("title")
+                    
+                    # Extract tweet ID from link
+                    tweet_link = time_element.get_attribute("href")
+                    tweet_id = tweet_link.split("/")[-1] if tweet_link else f"nitter_{hash(content)}"
+                    
+                    tweets.append({
+                        'id': tweet_id,
+                        'text': content,
+                        'username': username,
+                        'created_at': datetime.now(),
+                        'time_text': time_text
+                    })
+                    
+                except Exception as e:
+                    logging.debug(f"Error parsing tweet element: {e}")
+                    continue
+            
+            return tweets
+            
+        except Exception as e:
+            logging.error(f"Error scraping tweets from {username}: {e}")
+            return []
+    
+    def get_followed_users_tweets(self, username, max_tweets=20):
+        """Get tweets from users followed by the source account"""
+        if not self.twitter_service.is_authenticated:
+            return []
+        
+        try:
+            # First, get the list of users followed by the source account
+            if self.twitter_service.api:
+                # Get friends (users followed)
+                friends = self.twitter_service.api.get_friends(screen_name=username, count=10)
+                followed_users = [friend.screen_name for friend in friends]
+            else:
+                # Fallback to some default financial/news accounts
+                followed_users = [
+                    "business", "markets", "financialtimes", "wsj", 
+                    "reuters", "bloomberg", "economist", "ft"
+                ]
+            
+            all_tweets = []
+            for followed_user in followed_users[:5]:  # Limit to 5 users
+                # Try to get tweets via API first
+                api_result = self.twitter_service.get_user_tweets(followed_user, max_tweets//5)
+                
+                if api_result['success']:
+                    for tweet_data in api_result['tweets']:
+                        tweet = Tweet(
+                            id=tweet_data['id'],
+                            text=tweet_data['text'],
+                            username=followed_user,
+                            created_at=datetime.fromisoformat(tweet_data['created_at']),
+                            user_id=f"user_{followed_user}",
+                            content_type="tweet"
+                        )
+                        tweet_key = f"{tweet.id}_{tweet.username}"
+                        if tweet_key not in self.last_checked_tweets:
+                            all_tweets.append(tweet)
+                            self.last_checked_tweets.add(tweet_key)
+                else:
+                    # Fallback to Nitter scraping
+                    nitter_tweets = self.scrape_user_tweets(followed_user, max_tweets//5)
+                    for tweet_data in nitter_tweets:
+                        tweet = Tweet(
+                            id=tweet_data['id'],
+                            text=tweet_data['text'],
+                            username=followed_user,
+                            created_at=tweet_data['created_at'],
+                            user_id=f"user_{followed_user}",
+                            content_type="tweet"
+                        )
+                        tweet_key = f"{tweet.id}_{tweet.username}"
+                        if tweet_key not in self.last_checked_tweets:
+                            all_tweets.append(tweet)
+                            self.last_checked_tweets.add(tweet_key)
+            
+            return all_tweets
+            
+        except Exception as e:
+            logging.error(f"Error getting followed users tweets: {e}")
+            return []
+    
+    def close(self):
+        """Close the WebDriver"""
+        if self.driver:
+            self.driver.quit()
 
 class EnhancedNewsScraper:
     def __init__(self):
@@ -393,59 +734,6 @@ class EnhancedNewsScraper:
         
         return unique_articles
 
-class TweetMonitor:
-    def __init__(self, twitter_service):
-        self.twitter_service = twitter_service
-        self.last_checked_tweets = set()
-    
-    def get_followed_users_tweets(self, username, max_tweets=20):
-        """Get tweets from users followed by the source account"""
-        if not self.twitter_service.is_authenticated:
-            return []
-        
-        try:
-            # Simulate getting followed users (in real implementation, use Twitter API)
-            followed_users = ["user1", "user2", "user3", "user4", "user5"]
-            
-            all_tweets = []
-            for followed_user in followed_users[:5]:  # Limit to 5 users for demo
-                result = self.twitter_service.get_user_tweets(followed_user, max_tweets//5)
-                if result['success']:
-                    for tweet_data in result['tweets']:
-                        tweet = Tweet(
-                            id=tweet_data['id'],
-                            text=tweet_data['text'],
-                            username=followed_user,
-                            created_at=datetime.fromisoformat(tweet_data['created_at']),
-                            user_id=f"user_{followed_user}",
-                            content_type="tweet"
-                        )
-                        # Check if we've seen this tweet before
-                        tweet_key = f"{tweet.id}_{tweet.username}"
-                        if tweet_key not in self.last_checked_tweets:
-                            all_tweets.append(tweet)
-                            self.last_checked_tweets.add(tweet_key)
-            
-            return all_tweets
-            
-        except Exception as e:
-            logging.error(f"Error getting followed users tweets: {e}")
-            return []
-    
-    def monitor_followed_tweets(self, username, interval_minutes=5):
-        """Continuously monitor for new tweets from followed users"""
-        while True:
-            try:
-                tweets = self.get_followed_users_tweets(username)
-                if tweets:
-                    logging.info(f"Found {len(tweets)} new tweets from followed users")
-                    # Here you would process these tweets through AI analysis
-                    return tweets
-            except Exception as e:
-                logging.error(f"Error in tweet monitoring: {e}")
-            
-            time.sleep(interval_minutes * 60)
-
 class EnhancedAIAnalyzer:
     def __init__(self):
         self.turkish_keywords = {
@@ -563,118 +851,6 @@ class EnhancedAIAnalyzer:
             'confidence': 0.0,
             'relevant_keywords': [],
             'language': 'english'
-        }
-
-class EnhancedTwitterService:
-    def __init__(self):
-        self.accounts = TwitterAccount()
-        self.is_authenticated = False
-        self.last_request_time = 0
-        self.rate_limit_delay = 1.0  # seconds between requests
-    
-    def initialize_client(self, accounts):
-        """Initialize Twitter client with rate limiting"""
-        self.accounts = accounts
-        self.is_authenticated = True
-        logging.info("Twitter client initialized with rate limiting")
-    
-    def _rate_limit(self):
-        """Implement rate limiting"""
-        current_time = time.time()
-        time_since_last = current_time - self.last_request_time
-        
-        if time_since_last < self.rate_limit_delay:
-            sleep_time = self.rate_limit_delay - time_since_last
-            time.sleep(sleep_time)
-        
-        self.last_request_time = time.time()
-    
-    def test_connection(self):
-        """Test Twitter API connection with rate limiting"""
-        if not self.is_authenticated:
-            return {"success": False, "error": "Twitter client not initialized"}
-        
-        self._rate_limit()
-        
-        # Simulate API connection test with realistic delay
-        time.sleep(2)
-        
-        return {
-            "success": True,
-            "username": "test_user",
-            "id": "12345",
-            "name": "Test User"
-        }
-    
-    def get_user_tweets(self, username, max_tweets=5):
-        """Get user tweets with rate limiting"""
-        if not self.is_authenticated:
-            return {"success": False, "error": "Not authenticated"}
-        
-        self._rate_limit()
-        
-        # Simulate tweet fetching
-        logging.info(f"Fetching tweets for user: {username}")
-        time.sleep(1.5)
-        
-        # Simulated tweet data with more realistic content
-        sample_tweets = [
-            f"Just announced our quarterly earnings - stocks are looking great! 📈 #stocks #business",
-            f"New technology breakthrough in renewable energy market #technology #innovation",
-            f"Sales numbers are through the roof this quarter! 🎉 #sales #business",
-            f"Market analysis shows positive trends in crypto investments #crypto #finance",
-            f"Breaking news: Major development in international relations #news #world"
-        ]
-        
-        tweets = [
-            {
-                "id": f"tweet_{i}_{int(time.time())}",
-                "text": sample_tweets[i % len(sample_tweets)],
-                "created_at": datetime.now().isoformat()
-            }
-            for i in range(max_tweets)
-        ]
-        
-        return {
-            "success": True,
-            "tweets": tweets,
-            "user": {
-                "username": username,
-                "id": "user_123"
-            }
-        }
-    
-    def post_tweet(self, content):
-        """Post a tweet with rate limiting"""
-        if not self.is_authenticated:
-            return {"success": False, "error": "Not authenticated"}
-        
-        self._rate_limit()
-        
-        # Simulate tweet posting
-        logging.info(f"Posting tweet: {content[:50]}...")
-        time.sleep(1)
-        
-        return {
-            "success": True,
-            "tweet_id": f"tweet_{int(time.time())}",
-            "content": content
-        }
-    
-    def retweet(self, tweet_id):
-        """Retweet a tweet"""
-        if not self.is_authenticated:
-            return {"success": False, "error": "Not authenticated"}
-        
-        self._rate_limit()
-        
-        logging.info(f"Retweeting tweet: {tweet_id}")
-        time.sleep(1)
-        
-        return {
-            "success": True,
-            "retweet_id": f"rt_{tweet_id}",
-            "original_tweet_id": tweet_id
         }
 
 class FileBasedDataManager:
@@ -908,7 +1084,7 @@ class ModernTkinterDashboard:
         self.news_scraper = EnhancedNewsScraper()
         self.ai_analyzer = EnhancedAIAnalyzer()
         self.twitter_service = EnhancedTwitterService()
-        self.tweet_monitor = TweetMonitor(self.twitter_service)
+        self.nitter_scraper = NitterScraper(self.twitter_service)
         
         # State variables
         self.accounts = TwitterAccount()
@@ -938,6 +1114,11 @@ class ModernTkinterDashboard:
         self.content_page_size = 10
         self.content_search_term = ""
         self.content_status_filter = "all"
+        
+        # Performance optimization
+        self.content_cache = {}
+        self.last_refresh_time = 0
+        self.cache_timeout = 5  # seconds
         
         # Load saved settings
         self.load_settings()
@@ -1146,6 +1327,7 @@ class ModernTkinterDashboard:
         self.create_modern_input_field(cred_section, "Consumer Secret:", "consumer_secret", 1, True)
         self.create_modern_input_field(cred_section, "Access Token:", "access_token", 2, True)
         self.create_modern_input_field(cred_section, "Access Token Secret:", "access_token_secret", 3, True)
+        self.create_modern_input_field(cred_section, "Bearer Token:", "bearer_token", 4, True)
         
         # Buttons frame
         button_frame = tk.Frame(scrollable_frame, bg='#1e2732')
@@ -1866,27 +2048,44 @@ class ModernTkinterDashboard:
         self.refresh_contents()
     
     def refresh_contents(self):
-        """Refresh contents display with pagination and clickable actions"""
+        """Refresh contents display with pagination and clickable actions - OPTIMIZED"""
         try:
+            # Check cache first
+            current_time = time.time()
+            cache_key = f"{self.content_status_filter}_{self.content_search_term}_{self.current_content_page}"
+            
+            if (cache_key in self.content_cache and 
+                current_time - self.last_refresh_time < self.cache_timeout):
+                # Use cached content
+                cached_data = self.content_cache[cache_key]
+                contents = cached_data['contents']
+                total_count = cached_data['total_count']
+            else:
+                # Calculate pagination
+                total_count = self.db.get_content_count(
+                    self.content_status_filter, 
+                    self.content_search_term
+                )
+                offset = (self.current_content_page - 1) * self.content_page_size
+                
+                # Get contents
+                contents = self.db.get_contents(
+                    self.content_status_filter,
+                    self.content_search_term,
+                    self.content_page_size,
+                    offset
+                )
+                
+                # Cache the results
+                self.content_cache[cache_key] = {
+                    'contents': contents,
+                    'total_count': total_count
+                }
+                self.last_refresh_time = current_time
+            
             # Clear existing content
             for widget in self.content_display_frame.winfo_children():
                 widget.destroy()
-            
-            # Calculate pagination
-            total_count = self.db.get_content_count(
-                self.content_status_filter, 
-                self.content_search_term
-            )
-            total_pages = max(1, (total_count + self.content_page_size - 1) // self.content_page_size)
-            offset = (self.current_content_page - 1) * self.content_page_size
-            
-            # Get contents
-            contents = self.db.get_contents(
-                self.content_status_filter,
-                self.content_search_term,
-                self.content_page_size,
-                offset
-            )
             
             if not contents:
                 no_content_label = tk.Label(self.content_display_frame, 
@@ -1895,206 +2094,262 @@ class ModernTkinterDashboard:
                 no_content_label.pack(pady=20)
                 return
             
-            # Display contents
-            for content in contents:
-                content_card = tk.Frame(self.content_display_frame, bg='#2d3748', relief='flat', bd=1)
-                content_card.pack(fill='x', padx=10, pady=10)
-                
-                content_id = content['id']
-                content_type = content['type']
-                title = content['title']
-                content_text = content['content']
-                source = content['source']
-                username = content['username']
-                created_at = content['created_at']
-                status = content['status']
-                ai_analysis = json.loads(content['ai_analysis']) if content['ai_analysis'] else {}
-                
-                # Content header
-                header_frame = tk.Frame(content_card, bg='#2d3748')
-                header_frame.pack(fill='x', padx=15, pady=10)
-                
-                # Type badge
-                type_color = '#1da1f2' if content_type == 'tweet' else '#17bf63'
-                type_badge = tk.Label(header_frame, text=f"[{content_type.upper()}]", 
-                                     bg=type_color, fg='#ffffff', font=('Arial', 10, 'bold'),
-                                     padx=8, pady=2)
-                type_badge.pack(side='left')
-                
-                # Title
-                title_label = tk.Label(header_frame, text=title, 
-                                      bg='#2d3748', fg='#ffffff', font=('Arial', 12, 'bold'),
-                                      wraplength=800, justify='left')
-                title_label.pack(side='left', padx=10, fill='x', expand=True)
-                
-                # Source and date
-                info_frame = tk.Frame(content_card, bg='#2d3748')
-                info_frame.pack(fill='x', padx=15, pady=5)
-                
-                source_text = f"Source: {source}" if source else f"User: @{username}" if username else "Unknown Source"
-                source_label = tk.Label(info_frame, text=source_text,
-                                       bg='#2d3748', fg='#17bf63', font=('Arial', 10))
-                source_label.pack(side='left')
-                
-                date_label = tk.Label(info_frame, text=f"Added: {created_at}",
-                                     bg='#2d3748', fg='#8b98a5', font=('Arial', 10))
-                date_label.pack(side='right')
-                
-                # Status
-                status_frame = tk.Frame(content_card, bg='#2d3748')
-                status_frame.pack(fill='x', padx=15, pady=5)
-                
-                status_color = {
-                    'pending': '#ffad1f',
-                    'approved': '#17bf63', 
-                    'posted': '#1da1f2',
-                    'rejected': '#e0245e'
-                }.get(status, '#8b98a5')
-                
-                status_label = tk.Label(status_frame, text=f"Status: {status.upper()}",
-                                       bg='#2d3748', fg=status_color, font=('Arial', 10, 'bold'))
-                status_label.pack(side='left')
-                
-                # AI Analysis
-                if ai_analysis:
-                    ai_frame = tk.Frame(content_card, bg='#2d3748')
-                    ai_frame.pack(fill='x', padx=15, pady=5)
-                    
-                    sentiment = ai_analysis.get('sentiment', 'neutral')
-                    confidence = ai_analysis.get('confidence', 0) * 100
-                    keywords = ai_analysis.get('relevant_keywords', [])
-                    
-                    ai_text = f"AI: {sentiment} • {confidence:.0f}% confidence"
-                    if keywords:
-                        ai_text += f" • Keywords: {', '.join(keywords)}"
-                    
-                    ai_label = tk.Label(ai_frame, text=ai_text,
-                                       bg='#2d3748', fg='#8b98a5', font=('Arial', 10))
-                    ai_label.pack(side='left')
-                
-                # Content preview
-                content_frame = tk.Frame(content_card, bg='#2d3748')
-                content_frame.pack(fill='x', padx=15, pady=10)
-                
-                preview = content_text[:300] + "..." if len(content_text) > 300 else content_text
-                content_label = tk.Label(content_frame, text=preview,
-                                        bg='#2d3748', fg='#ffffff', font=('Arial', 10),
-                                        wraplength=800, justify='left')
-                content_label.pack(fill='x')
-                
-                # Actions
-                actions_frame = tk.Frame(content_card, bg='#2d3748')
-                actions_frame.pack(fill='x', padx=15, pady=10)
-                
-                actions_label = tk.Label(actions_frame, text="Actions: ",
-                                        bg='#2d3748', fg='#8b98a5', font=('Arial', 10))
-                actions_label.pack(side='left')
-                
-                # Action buttons based on status
-                if status == 'pending':
-                    approve_btn = tk.Label(actions_frame, text="[Approve]", 
-                                         bg='#2d3748', fg='#17bf63', font=('Arial', 10, 'bold'),
-                                         cursor='hand2')
-                    approve_btn.pack(side='left', padx=5)
-                    approve_btn.bind('<Button-1>', lambda e, cid=content_id: self.approve_content(cid))
-                    
-                    reject_btn = tk.Label(actions_frame, text="[Reject]", 
-                                        bg='#2d3748', fg='#e0245e', font=('Arial', 10, 'bold'),
-                                        cursor='hand2')
-                    reject_btn.pack(side='left', padx=5)
-                    reject_btn.bind('<Button-1>', lambda e, cid=content_id: self.reject_content(cid))
-                
-                elif status == 'approved':
-                    post_btn = tk.Label(actions_frame, text="[Post Now]", 
-                                      bg='#2d3748', fg='#1da1f2', font=('Arial', 10, 'bold'),
-                                      cursor='hand2')
-                    post_btn.pack(side='left', padx=5)
-                    post_btn.bind('<Button-1>', lambda e, cid=content_id: self.post_content(cid))
-                
-                # Delete button (always available)
-                delete_btn = tk.Label(actions_frame, text="[Delete]", 
-                                    bg='#2d3748', fg='#e0245e', font=('Arial', 10, 'bold'),
-                                    cursor='hand2')
-                delete_btn.pack(side='left', padx=5)
-                delete_btn.bind('<Button-1>', lambda e, cid=content_id: self.delete_content(cid))
-                
-                # Separator
-                separator = tk.Frame(self.content_display_frame, bg='#1e2732', height=1)
-                separator.pack(fill='x', padx=20, pady=5)
-            
-            # Update pagination
-            self.page_label.config(text=f"Page {self.current_content_page} of {total_pages}")
-            self.prev_btn.config(state='normal' if self.current_content_page > 1 else 'disabled')
-            self.next_btn.config(state='normal' if self.current_content_page < total_pages else 'disabled')
-            
-            # Update count
-            self.content_count_label.config(text=f"{total_count} Items")
+            # Display contents using threading for better performance
+            self.display_contents_threaded(contents, total_count)
             
         except Exception as e:
             logging.error(f"Error refreshing contents: {e}")
             self.db.log_event("error", f"Error refreshing contents: {e}")
     
+    def display_contents_threaded(self, contents, total_count):
+        """Display contents in a separate thread for better performance"""
+        def display_contents():
+            try:
+                for content in contents:
+                    if self.stop_display:
+                        return
+                    
+                    content_card = self.create_content_card(content)
+                    content_card.pack(fill='x', padx=10, pady=10)
+                    
+                    # Add separator
+                    separator = tk.Frame(self.content_display_frame, bg='#1e2732', height=1)
+                    separator.pack(fill='x', padx=20, pady=5)
+                
+                # Update pagination on main thread
+                self.root.after(0, self.update_pagination, total_count)
+                
+            except Exception as e:
+                logging.error(f"Error displaying contents: {e}")
+        
+        # Start display in separate thread
+        self.stop_display = False
+        display_thread = threading.Thread(target=display_contents, daemon=True)
+        display_thread.start()
+    
+    def create_content_card(self, content):
+        """Create a content card widget - OPTIMIZED"""
+        content_card = tk.Frame(self.content_display_frame, bg='#2d3748', relief='flat', bd=1)
+        
+        content_id = content['id']
+        content_type = content['type']
+        title = content['title']
+        content_text = content['content']
+        source = content['source']
+        username = content['username']
+        created_at = content['created_at']
+        status = content['status']
+        ai_analysis = json.loads(content['ai_analysis']) if content['ai_analysis'] else {}
+        
+        # Content header
+        header_frame = tk.Frame(content_card, bg='#2d3748')
+        header_frame.pack(fill='x', padx=15, pady=10)
+        
+        # Type badge
+        type_color = '#1da1f2' if content_type == 'tweet' else '#17bf63'
+        type_badge = tk.Label(header_frame, text=f"[{content_type.upper()}]", 
+                             bg=type_color, fg='#ffffff', font=('Arial', 10, 'bold'),
+                             padx=8, pady=2)
+        type_badge.pack(side='left')
+        
+        # Title
+        title_label = tk.Label(header_frame, text=title, 
+                              bg='#2d3748', fg='#ffffff', font=('Arial', 12, 'bold'),
+                              wraplength=800, justify='left')
+        title_label.pack(side='left', padx=10, fill='x', expand=True)
+        
+        # Source and date
+        info_frame = tk.Frame(content_card, bg='#2d3748')
+        info_frame.pack(fill='x', padx=15, pady=5)
+        
+        source_text = f"Source: {source}" if source else f"User: @{username}" if username else "Unknown Source"
+        source_label = tk.Label(info_frame, text=source_text,
+                               bg='#2d3748', fg='#17bf63', font=('Arial', 10))
+        source_label.pack(side='left')
+        
+        date_label = tk.Label(info_frame, text=f"Added: {created_at}",
+                             bg='#2d3748', fg='#8b98a5', font=('Arial', 10))
+        date_label.pack(side='right')
+        
+        # Status
+        status_frame = tk.Frame(content_card, bg='#2d3748')
+        status_frame.pack(fill='x', padx=15, pady=5)
+        
+        status_color = {
+            'pending': '#ffad1f',
+            'approved': '#17bf63', 
+            'posted': '#1da1f2',
+            'rejected': '#e0245e'
+        }.get(status, '#8b98a5')
+        
+        status_label = tk.Label(status_frame, text=f"Status: {status.upper()}",
+                               bg='#2d3748', fg=status_color, font=('Arial', 10, 'bold'))
+        status_label.pack(side='left')
+        
+        # AI Analysis
+        if ai_analysis:
+            ai_frame = tk.Frame(content_card, bg='#2d3748')
+            ai_frame.pack(fill='x', padx=15, pady=5)
+            
+            sentiment = ai_analysis.get('sentiment', 'neutral')
+            confidence = ai_analysis.get('confidence', 0) * 100
+            keywords = ai_analysis.get('relevant_keywords', [])
+            
+            ai_text = f"AI: {sentiment} • {confidence:.0f}% confidence"
+            if keywords:
+                ai_text += f" • Keywords: {', '.join(keywords)}"
+            
+            ai_label = tk.Label(ai_frame, text=ai_text,
+                               bg='#2d3748', fg='#8b98a5', font=('Arial', 10))
+            ai_label.pack(side='left')
+        
+        # Content preview
+        content_frame = tk.Frame(content_card, bg='#2d3748')
+        content_frame.pack(fill='x', padx=15, pady=10)
+        
+        preview = content_text[:300] + "..." if len(content_text) > 300 else content_text
+        content_label = tk.Label(content_frame, text=preview,
+                                bg='#2d3748', fg='#ffffff', font=('Arial', 10),
+                                wraplength=800, justify='left')
+        content_label.pack(fill='x')
+        
+        # Actions - OPTIMIZED with direct function calls
+        actions_frame = tk.Frame(content_card, bg='#2d3748')
+        actions_frame.pack(fill='x', padx=15, pady=10)
+        
+        actions_label = tk.Label(actions_frame, text="Actions: ",
+                                bg='#2d3748', fg='#8b98a5', font=('Arial', 10))
+        actions_label.pack(side='left')
+        
+        # Action buttons based on status - OPTIMIZED
+        if status == 'pending':
+            approve_btn = tk.Label(actions_frame, text="[Approve]", 
+                                 bg='#2d3748', fg='#17bf63', font=('Arial', 10, 'bold'),
+                                 cursor='hand2')
+            approve_btn.pack(side='left', padx=5)
+            approve_btn.bind('<Button-1>', lambda e, cid=content_id: self.approve_content(cid))
+            
+            reject_btn = tk.Label(actions_frame, text="[Reject]", 
+                                bg='#2d3748', fg='#e0245e', font=('Arial', 10, 'bold'),
+                                cursor='hand2')
+            reject_btn.pack(side='left', padx=5)
+            reject_btn.bind('<Button-1>', lambda e, cid=content_id: self.reject_content(cid))
+        
+        elif status == 'approved':
+            post_btn = tk.Label(actions_frame, text="[Post Now]", 
+                              bg='#2d3748', fg='#1da1f2', font=('Arial', 10, 'bold'),
+                              cursor='hand2')
+            post_btn.pack(side='left', padx=5)
+            post_btn.bind('<Button-1>', lambda e, cid=content_id: self.post_content(cid))
+        
+        # Delete button (always available)
+        delete_btn = tk.Label(actions_frame, text="[Delete]", 
+                            bg='#2d3748', fg='#e0245e', font=('Arial', 10, 'bold'),
+                            cursor='hand2')
+        delete_btn.pack(side='left', padx=5)
+        delete_btn.bind('<Button-1>', lambda e, cid=content_id: self.delete_content(cid))
+        
+        return content_card
+    
+    def update_pagination(self, total_count):
+        """Update pagination controls"""
+        total_pages = max(1, (total_count + self.content_page_size - 1) // self.content_page_size)
+        self.page_label.config(text=f"Page {self.current_content_page} of {total_pages}")
+        self.prev_btn.config(state='normal' if self.current_content_page > 1 else 'disabled')
+        self.next_btn.config(state='normal' if self.current_content_page < total_pages else 'disabled')
+        
+        # Update count
+        self.content_count_label.config(text=f"{total_count} Items")
+    
     def approve_content(self, content_id):
-        """Approve content for posting"""
-        if self.db.update_content_status(content_id, 'approved'):
-            self.refresh_contents()
-            self.db.log_event("success", f"Content {content_id} approved")
-            messagebox.showinfo("Success", "Content approved!")
-        else:
-            messagebox.showerror("Error", "Failed to approve content")
+        """Approve content for posting - OPTIMIZED"""
+        def approve():
+            try:
+                if self.db.update_content_status(content_id, 'approved'):
+                    # Clear cache to force refresh
+                    self.content_cache.clear()
+                    self.root.after(0, self.refresh_contents)
+                    self.root.after(0, lambda: self.db.log_event("success", f"Content {content_id} approved"))
+                    self.root.after(0, lambda: messagebox.showinfo("Success", "Content approved!"))
+                else:
+                    self.root.after(0, lambda: messagebox.showerror("Error", "Failed to approve content"))
+            except Exception as e:
+                self.root.after(0, lambda: messagebox.showerror("Error", f"Error: {str(e)}"))
+        
+        threading.Thread(target=approve, daemon=True).start()
     
     def reject_content(self, content_id):
-        """Reject content"""
-        if self.db.update_content_status(content_id, 'rejected'):
-            self.refresh_contents()
-            self.db.log_event("info", f"Content {content_id} rejected")
-            messagebox.showinfo("Success", "Content rejected!")
-        else:
-            messagebox.showerror("Error", "Failed to reject content")
-    
-    def post_content(self, content_id):
-        """Post content to Twitter"""
-        try:
-            # Get content details
-            contents = self.db.get_contents(limit=10000)  # Get all to find the specific one
-            content = None
-            for c in contents:
-                if c['id'] == str(content_id):
-                    content = c
-                    break
-            
-            if not content:
-                messagebox.showerror("Error", "Content not found")
-                return
-            
-            # Prepare tweet content
-            custom_text = self.ai_settings.get('custom_text', '')
-            tweet_content = f"{custom_text}\n\n{content['title']}\n\n{content['content'][:200]}..."
-            
-            # Post to Twitter
-            result = self.twitter_service.post_tweet(tweet_content)
-            if result['success']:
-                self.db.update_content_status(content_id, 'posted')
-                self.refresh_contents()
-                self.db.log_event("success", f"Content {content_id} posted to Twitter")
-                messagebox.showinfo("Success", "Content posted successfully!")
-            else:
-                messagebox.showerror("Error", f"Failed to post: {result.get('error', 'Unknown error')}")
-                
-        except Exception as e:
-            error_msg = f"Error posting content: {e}"
-            messagebox.showerror("Error", error_msg)
-            self.db.log_event("error", error_msg)
+        """Reject content - OPTIMIZED"""
+        def reject():
+            try:
+                if self.db.update_content_status(content_id, 'rejected'):
+                    # Clear cache to force refresh
+                    self.content_cache.clear()
+                    self.root.after(0, self.refresh_contents)
+                    self.root.after(0, lambda: self.db.log_event("info", f"Content {content_id} rejected"))
+                    self.root.after(0, lambda: messagebox.showinfo("Success", "Content rejected!"))
+                else:
+                    self.root.after(0, lambda: messagebox.showerror("Error", "Failed to reject content"))
+            except Exception as e:
+                self.root.after(0, lambda: messagebox.showerror("Error", f"Error: {str(e)}"))
+        
+        threading.Thread(target=reject, daemon=True).start()
     
     def delete_content(self, content_id):
-        """Delete content"""
-        if messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this content?"):
-            if self.db.delete_content(content_id):
-                self.refresh_contents()
-                self.db.log_event("info", f"Content {content_id} deleted")
-                messagebox.showinfo("Success", "Content deleted!")
-            else:
-                messagebox.showerror("Error", "Failed to delete content")
+        """Delete content - OPTIMIZED"""
+        def delete():
+            try:
+                if self.db.delete_content(content_id):
+                    # Clear cache to force refresh
+                    self.content_cache.clear()
+                    self.root.after(0, self.refresh_contents)
+                    self.root.after(0, lambda: self.db.log_event("info", f"Content {content_id} deleted"))
+                    self.root.after(0, lambda: messagebox.showinfo("Success", "Content deleted!"))
+                else:
+                    self.root.after(0, lambda: messagebox.showerror("Error", "Failed to delete content"))
+            except Exception as e:
+                self.root.after(0, lambda: messagebox.showerror("Error", f"Error: {str(e)}"))
+        
+        threading.Thread(target=delete, daemon=True).start()
+    
+    def post_content(self, content_id):
+        """Post content to Twitter - OPTIMIZED"""
+        def post():
+            try:
+                # Get content details
+                contents = self.db.get_contents(limit=10000)
+                content = None
+                for c in contents:
+                    if c['id'] == str(content_id):
+                        content = c
+                        break
+                
+                if not content:
+                    self.root.after(0, lambda: messagebox.showerror("Error", "Content not found"))
+                    return
+                
+                # Prepare tweet content
+                custom_text = self.ai_settings.get('custom_text', '')
+                tweet_content = f"{custom_text}\n\n{content['title']}\n\n{content['content'][:200]}..."
+                
+                # Post to Twitter
+                result = self.twitter_service.post_tweet(tweet_content)
+                if result['success']:
+                    self.db.update_content_status(content_id, 'posted')
+                    # Clear cache to force refresh
+                    self.content_cache.clear()
+                    self.root.after(0, self.refresh_contents)
+                    self.root.after(0, lambda: self.db.log_event("success", f"Content {content_id} posted to Twitter"))
+                    self.root.after(0, lambda: messagebox.showinfo("Success", "Content posted successfully!"))
+                else:
+                    self.root.after(0, lambda: messagebox.showerror("Error", f"Failed to post: {result.get('error', 'Unknown error')}"))
+                    
+            except Exception as e:
+                error_msg = f"Error posting content: {e}"
+                self.root.after(0, lambda: messagebox.showerror("Error", error_msg))
+                self.root.after(0, lambda: self.db.log_event("error", error_msg))
+        
+        threading.Thread(target=post, daemon=True).start()
     
     def prev_content_page(self):
         """Go to previous content page"""
@@ -2108,24 +2363,32 @@ class ModernTkinterDashboard:
         self.refresh_contents()
     
     def bulk_approve_contents(self):
-        """Bulk approve all visible contents"""
+        """Bulk approve all visible contents - OPTIMIZED"""
+        def bulk_approve():
+            try:
+                contents = self.db.get_contents(
+                    self.content_status_filter,
+                    self.content_search_term,
+                    self.content_page_size,
+                    (self.current_content_page - 1) * self.content_page_size
+                )
+                
+                approved_count = 0
+                for content in contents:
+                    if content['status'] == 'pending':
+                        if self.db.update_content_status(content['id'], 'approved'):
+                            approved_count += 1
+                
+                # Clear cache to force refresh
+                self.content_cache.clear()
+                self.root.after(0, self.refresh_contents)
+                self.root.after(0, lambda: messagebox.showinfo("Success", f"Approved {approved_count} contents!"))
+                self.root.after(0, lambda: self.db.log_event("success", f"Bulk approved {approved_count} contents"))
+            except Exception as e:
+                self.root.after(0, lambda: messagebox.showerror("Error", f"Error: {str(e)}"))
+        
         if messagebox.askyesno("Bulk Approve", "Approve all visible contents?"):
-            contents = self.db.get_contents(
-                self.content_status_filter,
-                self.content_search_term,
-                self.content_page_size,
-                (self.current_content_page - 1) * self.content_page_size
-            )
-            
-            approved_count = 0
-            for content in contents:
-                if content['status'] == 'pending':
-                    if self.db.update_content_status(content['id'], 'approved'):
-                        approved_count += 1
-            
-            self.refresh_contents()
-            messagebox.showinfo("Success", f"Approved {approved_count} contents!")
-            self.db.log_event("success", f"Bulk approved {approved_count} contents")
+            threading.Thread(target=bulk_approve, daemon=True).start()
     
     def refresh_stats(self):
         """Refresh statistics display"""
@@ -2198,6 +2461,7 @@ class ModernTkinterDashboard:
             self.accounts.consumer_secret = self.consumer_secret_var.get().strip()
             self.accounts.access_token = self.access_token_var.get().strip()
             self.accounts.access_token_secret = self.access_token_secret_var.get().strip()
+            self.accounts.bearer_token = self.bearer_token_var.get().strip()
             
             # Validate required fields
             if not all([self.accounts.source, self.accounts.target]):
@@ -2208,10 +2472,14 @@ class ModernTkinterDashboard:
             self.db.save_setting('accounts', self.accounts.__dict__)
             
             # Initialize Twitter client
-            self.twitter_service.initialize_client(self.accounts)
+            success = self.twitter_service.initialize_client(self.accounts)
             
-            messagebox.showinfo("Success", "Account settings saved successfully!")
-            self.db.log_event("success", "Account settings saved")
+            if success:
+                messagebox.showinfo("Success", "Account settings saved and Twitter client initialized successfully!")
+                self.db.log_event("success", "Account settings saved and Twitter client initialized")
+            else:
+                messagebox.showwarning("Warning", "Account settings saved but Twitter client initialization failed. Check your API credentials.")
+                self.db.log_event("warning", "Account settings saved but Twitter client initialization failed")
             
         except Exception as e:
             error_msg = f"Failed to save account settings: {e}"
@@ -2501,8 +2769,8 @@ class ModernTkinterDashboard:
                         logging.info("Tweet monitoring triggered")
                         self.db.log_event("info", "Tweet monitoring triggered")
                         
-                        # Get tweets from followed users
-                        tweets = self.tweet_monitor.get_followed_users_tweets(
+                        # Get tweets from followed users using Nitter scraper
+                        tweets = self.nitter_scraper.get_followed_users_tweets(
                             self.accounts.source, 
                             max_tweets=20
                         )
@@ -2578,7 +2846,7 @@ class ModernTkinterDashboard:
                     messagebox.showwarning("Warning", "Please set Source Account first")
                     return
                 
-                tweets = self.tweet_monitor.get_followed_users_tweets(self.accounts.source, 5)
+                tweets = self.nitter_scraper.get_followed_users_tweets(self.accounts.source, 5)
                 messagebox.showinfo("Test Results", 
                                   f"Tweet monitoring test completed!\n\n"
                                   f"Tweets found: {len(tweets)}\n"
@@ -2806,6 +3074,8 @@ Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
         """Handle application closing"""
         self.stop_auto_scan = True
         self.stop_tweet_monitoring = True
+        if self.nitter_scraper:
+            self.nitter_scraper.close()
         self.db.log_event("info", "Application closing")
         self.root.destroy()
 

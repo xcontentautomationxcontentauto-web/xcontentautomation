@@ -1,0 +1,2 @@
+2025-11-10 15:20:45 [INFO] system: Application started successfully
+2025-11-10 15:20:55 [INFO] system: Application closing

@@ -13,3 +13,18 @@
 2025-11-10 15:02:36 [INFO] system: Starting enhanced news scan
 2025-11-10 15:02:36 [INFO] system: Application started successfully
 2025-11-10 15:04:00 [INFO] system: Application closing
+2025-11-10 15:22:11 [INFO] system: Auto-scan triggered
+2025-11-10 15:22:11 [INFO] system: Starting enhanced news scan
+2025-11-10 15:22:11 [INFO] system: Application started successfully
+2025-11-10 15:22:29 [SUCCESS] system: Content 1762782300 approved
+2025-11-10 15:26:29 [INFO] system: Application closing
+2025-11-13 03:43:19 [INFO] system: Auto-scan triggered
+2025-11-13 03:43:19 [INFO] system: Application started successfully
+2025-11-13 03:43:19 [INFO] system: Starting enhanced news scan
+2025-11-13 03:48:44 [SUCCESS] system: Scan completed: 30 articles, 4 approved
+2025-11-13 03:49:26 [SUCCESS] system: Content 1763002123 approved
+2025-11-13 03:53:44 [INFO] system: Auto-scan triggered
+2025-11-13 03:53:44 [INFO] system: Starting enhanced news scan
+2025-11-13 03:56:52 [SUCCESS] system: Scan completed: 45 articles, 8 approved
+2025-11-13 03:57:19 [INFO] system: Content 1763002611 rejected
+2025-11-13 03:57:56 [INFO] system: Application closing
