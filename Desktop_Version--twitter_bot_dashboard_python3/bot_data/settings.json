@@ -19,5 +19,15 @@
     "scan_interval": 5,
     "max_feeds": 20,
     "feed_type": "rss"
+  },
+  "accounts": {
+    "source": "HarunaAuwalu18",
+    "target": "HarunaAuwalu18",
+    "consumer_key": "BhUZdQZFlJBR6WbY71gha3S42",
+    "consumer_secret": "XWu08wx24aQhBKw6Alqxgl8GvpnzS53zzemgfRTJZcJr6yDUbs",
+    "access_token": "1565838594304000001-gbYIOHFHyBc7Q0Z7y0S4CEUK8RVaIE",
+    "access_token_secret": "TPsJaaejSj7ZcFnJRHzPkMEYumF9eZr4cV62xY6I37GvB",
+    "access_level": "Unknown",
+    "permissions": []
   }
 }

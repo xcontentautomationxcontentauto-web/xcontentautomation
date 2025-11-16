@@ -1,11 +1,11 @@
 {
-  "total_scanned": 105,
-  "ai_approved": 17,
+  "total_scanned": 429,
+  "ai_approved": 125,
   "posted": 0,
   "rejected": 0,
-  "last_scan": "2025-11-13T03:56:51.593351",
-  "last_tweet": null,
+  "last_scan": "2025-11-16T03:58:45.575206",
+  "last_tweet": "2025-11-16T03:45:01.211945",
   "last_news": null,
   "system_uptime": "0 days, 0 hours",
-  "next_scan": "2025-11-13T04:01:51.593381"
+  "next_scan": "2025-11-16T04:03:45.575248"
 }

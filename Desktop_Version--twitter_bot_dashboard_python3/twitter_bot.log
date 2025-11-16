@@ -495,3 +495,646 @@
 2025-11-13 03:56:51,551 - INFO - root - Scraping completed: 3 successful, 11 failed
 2025-11-13 03:56:51,552 - INFO - root - Total unique articles: 45
 2025-11-13 03:56:52,266 - INFO - root - Scan completed. Found 45 articles, 8 approved.
+2025-11-16 02:29:29,760 - INFO - root - Auto-scan triggered
+2025-11-16 02:29:29,761 - INFO - root - Auto-scan started
+2025-11-16 02:29:29,765 - INFO - root - Starting enhanced news scan...
+2025-11-16 02:29:29,766 - INFO - root - Tweet monitoring triggered
+2025-11-16 02:29:29,766 - INFO - root - Tweet monitoring started
+2025-11-16 02:29:29,769 - INFO - root - Starting enhanced scraping of 14 feeds...
+2025-11-16 02:29:29,771 - INFO - root - Scraping BBC News (attempt 1)...
+2025-11-16 02:29:34,684 - INFO - root - Found 0 articles from BBC News
+2025-11-16 02:29:34,686 - WARNING - root - ⚠️ No articles found from BBC News
+2025-11-16 02:29:35,688 - INFO - root - Scraping Reuters World News (attempt 1)...
+2025-11-16 02:29:42,213 - WARNING - root - Attempt 1 failed for Reuters World News: Response ended prematurely
+2025-11-16 02:29:44,216 - INFO - root - Scraping Reuters World News (attempt 2)...
+2025-11-16 02:29:51,981 - WARNING - root - Attempt 2 failed for Reuters World News: Response ended prematurely
+2025-11-16 02:29:51,982 - ERROR - root - All attempts failed for Reuters World News: Response ended prematurely
+2025-11-16 02:29:51,984 - WARNING - root - ⚠️ No articles found from Reuters World News
+2025-11-16 02:29:52,987 - INFO - root - Scraping Al Jazeera English (attempt 1)...
+2025-11-16 02:29:57,263 - INFO - root - Found 0 articles from Al Jazeera English
+2025-11-16 02:29:57,265 - WARNING - root - ⚠️ No articles found from Al Jazeera English
+2025-11-16 02:29:58,267 - INFO - root - Scraping The Guardian World (attempt 1)...
+2025-11-16 02:30:04,911 - WARNING - root - Attempt 1 failed for The Guardian World: Response ended prematurely
+2025-11-16 02:30:06,914 - INFO - root - Scraping The Guardian World (attempt 2)...
+2025-11-16 02:30:14,922 - WARNING - root - Attempt 2 failed for The Guardian World: Response ended prematurely
+2025-11-16 02:30:14,923 - ERROR - root - All attempts failed for The Guardian World: Response ended prematurely
+2025-11-16 02:30:14,925 - WARNING - root - ⚠️ No articles found from The Guardian World
+2025-11-16 02:30:15,927 - INFO - root - Scraping The Hindu (India) (attempt 1)...
+2025-11-16 02:30:25,996 - INFO - root - Found 0 articles from The Hindu (India)
+2025-11-16 02:30:25,997 - WARNING - root - ⚠️ No articles found from The Hindu (India)
+2025-11-16 02:30:26,999 - INFO - root - Scraping CNN World (attempt 1)...
+2025-11-16 02:30:38,456 - INFO - root - Found 0 articles from CNN World
+2025-11-16 02:30:38,457 - WARNING - root - ⚠️ No articles found from CNN World
+2025-11-16 02:30:39,460 - INFO - root - Scraping NBC News World (attempt 1)...
+2025-11-16 02:30:44,781 - INFO - root - Found 15 articles from NBC News World
+2025-11-16 02:30:44,783 - INFO - root - ✅ Successfully got 15 articles from NBC News World
+2025-11-16 02:30:46,784 - INFO - root - Scraping DW News (Germany) (attempt 1)...
+2025-11-16 02:30:54,097 - INFO - root - Found 0 articles from DW News (Germany)
+2025-11-16 02:30:54,098 - WARNING - root - ⚠️ No articles found from DW News (Germany)
+2025-11-16 02:30:55,101 - INFO - root - Scraping Press TV (Iran) (attempt 1)...
+2025-11-16 02:30:59,831 - INFO - root - Found 15 articles from Press TV (Iran)
+2025-11-16 02:30:59,832 - INFO - root - ✅ Successfully got 15 articles from Press TV (Iran)
+2025-11-16 02:31:01,834 - INFO - root - Scraping Tehran Times (attempt 1)...
+2025-11-16 02:31:07,284 - INFO - root - Found 0 articles from Tehran Times
+2025-11-16 02:31:07,286 - WARNING - root - ⚠️ No articles found from Tehran Times
+2025-11-16 02:31:08,289 - INFO - root - Scraping Arab News (Saudi Arabia) (attempt 1)...
+2025-11-16 02:31:09,364 - INFO - root - Found 0 articles from Arab News (Saudi Arabia)
+2025-11-16 02:31:09,366 - WARNING - root - ⚠️ No articles found from Arab News (Saudi Arabia)
+2025-11-16 02:31:10,368 - INFO - root - Scraping Jerusalem Post (attempt 1)...
+2025-11-16 02:31:18,279 - INFO - root - Found 0 articles from Jerusalem Post
+2025-11-16 02:31:18,281 - WARNING - root - ⚠️ No articles found from Jerusalem Post
+2025-11-16 02:31:19,282 - INFO - root - Scraping Daily Sabah (Turkey) (attempt 1)...
+2025-11-16 02:31:27,318 - INFO - root - Found 0 articles from Daily Sabah (Turkey)
+2025-11-16 02:31:27,321 - WARNING - root - ⚠️ No articles found from Daily Sabah (Turkey)
+2025-11-16 02:31:28,323 - INFO - root - Scraping China Daily (attempt 1)...
+2025-11-16 02:31:53,150 - WARNING - root - Attempt 1 failed for China Daily: HTTPSConnectionPool(host='api.allorigins.win', port=443): Read timed out.
+2025-11-16 02:31:55,152 - INFO - root - Scraping China Daily (attempt 2)...
+2025-11-16 02:32:03,524 - WARNING - root - Attempt 2 failed for China Daily: Response ended prematurely
+2025-11-16 02:32:03,526 - ERROR - root - All attempts failed for China Daily: Response ended prematurely
+2025-11-16 02:32:03,528 - WARNING - root - ⚠️ No articles found from China Daily
+2025-11-16 02:32:04,534 - INFO - root - Scraping completed: 2 successful, 12 failed
+2025-11-16 02:32:04,536 - INFO - root - Total unique articles: 30
+2025-11-16 02:32:06,034 - INFO - root - Scan completed. Found 30 articles, 6 approved.
+2025-11-16 02:34:29,771 - INFO - root - Tweet monitoring triggered
+2025-11-16 02:37:06,039 - INFO - root - Auto-scan triggered
+2025-11-16 02:37:06,042 - INFO - root - Starting enhanced news scan...
+2025-11-16 02:37:06,045 - INFO - root - Starting enhanced scraping of 14 feeds...
+2025-11-16 02:37:06,048 - INFO - root - Scraping BBC News (attempt 1)...
+2025-11-16 02:37:14,580 - INFO - root - Found 0 articles from BBC News
+2025-11-16 02:37:14,581 - WARNING - root - ⚠️ No articles found from BBC News
+2025-11-16 02:37:15,582 - INFO - root - Scraping Reuters World News (attempt 1)...
+2025-11-16 02:37:22,454 - WARNING - root - Attempt 1 failed for Reuters World News: Response ended prematurely
+2025-11-16 02:37:24,456 - INFO - root - Scraping Reuters World News (attempt 2)...
+2025-11-16 02:37:33,681 - INFO - root - Found 0 articles from Reuters World News
+2025-11-16 02:37:33,682 - WARNING - root - ⚠️ No articles found from Reuters World News
+2025-11-16 02:37:34,684 - INFO - root - Scraping Al Jazeera English (attempt 1)...
+2025-11-16 02:37:37,562 - INFO - root - Found 0 articles from Al Jazeera English
+2025-11-16 02:37:37,563 - WARNING - root - ⚠️ No articles found from Al Jazeera English
+2025-11-16 02:37:38,565 - INFO - root - Scraping The Guardian World (attempt 1)...
+2025-11-16 02:37:45,371 - WARNING - root - Attempt 1 failed for The Guardian World: Response ended prematurely
+2025-11-16 02:37:47,373 - INFO - root - Scraping The Guardian World (attempt 2)...
+2025-11-16 02:37:55,486 - WARNING - root - Attempt 2 failed for The Guardian World: Response ended prematurely
+2025-11-16 02:37:55,487 - ERROR - root - All attempts failed for The Guardian World: Response ended prematurely
+2025-11-16 02:37:55,488 - WARNING - root - ⚠️ No articles found from The Guardian World
+2025-11-16 02:37:56,490 - INFO - root - Scraping The Hindu (India) (attempt 1)...
+2025-11-16 02:38:05,614 - INFO - root - Found 0 articles from The Hindu (India)
+2025-11-16 02:38:05,616 - WARNING - root - ⚠️ No articles found from The Hindu (India)
+2025-11-16 02:38:06,617 - INFO - root - Scraping CNN World (attempt 1)...
+2025-11-16 02:38:13,976 - INFO - root - Found 0 articles from CNN World
+2025-11-16 02:38:13,978 - WARNING - root - ⚠️ No articles found from CNN World
+2025-11-16 02:38:14,979 - INFO - root - Scraping NBC News World (attempt 1)...
+2025-11-16 02:38:20,875 - INFO - root - Found 15 articles from NBC News World
+2025-11-16 02:38:20,876 - INFO - root - ✅ Successfully got 15 articles from NBC News World
+2025-11-16 02:38:22,877 - INFO - root - Scraping DW News (Germany) (attempt 1)...
+2025-11-16 02:38:30,593 - INFO - root - Found 0 articles from DW News (Germany)
+2025-11-16 02:38:30,594 - WARNING - root - ⚠️ No articles found from DW News (Germany)
+2025-11-16 02:38:31,597 - INFO - root - Scraping Press TV (Iran) (attempt 1)...
+2025-11-16 02:38:37,498 - INFO - root - Found 15 articles from Press TV (Iran)
+2025-11-16 02:38:37,498 - INFO - root - ✅ Successfully got 15 articles from Press TV (Iran)
+2025-11-16 02:38:39,500 - INFO - root - Scraping Tehran Times (attempt 1)...
+2025-11-16 02:38:45,155 - INFO - root - Found 0 articles from Tehran Times
+2025-11-16 02:38:45,156 - WARNING - root - ⚠️ No articles found from Tehran Times
+2025-11-16 02:38:46,157 - INFO - root - Scraping Arab News (Saudi Arabia) (attempt 1)...
+2025-11-16 02:38:47,534 - INFO - root - Found 0 articles from Arab News (Saudi Arabia)
+2025-11-16 02:38:47,535 - WARNING - root - ⚠️ No articles found from Arab News (Saudi Arabia)
+2025-11-16 02:38:48,537 - INFO - root - Scraping Jerusalem Post (attempt 1)...
+2025-11-16 02:38:56,080 - INFO - root - Found 0 articles from Jerusalem Post
+2025-11-16 02:38:56,081 - WARNING - root - ⚠️ No articles found from Jerusalem Post
+2025-11-16 02:38:57,082 - INFO - root - Scraping Daily Sabah (Turkey) (attempt 1)...
+2025-11-16 02:39:05,271 - INFO - root - Found 0 articles from Daily Sabah (Turkey)
+2025-11-16 02:39:05,272 - WARNING - root - ⚠️ No articles found from Daily Sabah (Turkey)
+2025-11-16 02:39:06,274 - INFO - root - Scraping China Daily (attempt 1)...
+2025-11-16 02:39:19,093 - WARNING - root - Attempt 1 failed for China Daily: Response ended prematurely
+2025-11-16 02:39:21,095 - INFO - root - Scraping China Daily (attempt 2)...
+2025-11-16 02:39:29,120 - WARNING - root - Attempt 2 failed for China Daily: Response ended prematurely
+2025-11-16 02:39:29,128 - ERROR - root - All attempts failed for China Daily: Response ended prematurely
+2025-11-16 02:39:29,129 - WARNING - root - ⚠️ No articles found from China Daily
+2025-11-16 02:39:29,775 - INFO - root - Tweet monitoring triggered
+2025-11-16 02:39:30,141 - INFO - root - Scraping completed: 2 successful, 12 failed
+2025-11-16 02:39:30,142 - INFO - root - Total unique articles: 30
+2025-11-16 02:39:30,940 - INFO - root - Scan completed. Found 30 articles, 6 approved.
+2025-11-16 02:44:29,779 - INFO - root - Tweet monitoring triggered
+2025-11-16 02:44:30,944 - INFO - root - Auto-scan triggered
+2025-11-16 02:44:30,948 - INFO - root - Starting enhanced news scan...
+2025-11-16 02:44:30,951 - INFO - root - Starting enhanced scraping of 14 feeds...
+2025-11-16 02:44:30,952 - INFO - root - Scraping BBC News (attempt 1)...
+2025-11-16 02:44:35,368 - INFO - root - Found 0 articles from BBC News
+2025-11-16 02:44:35,369 - WARNING - root - ⚠️ No articles found from BBC News
+2025-11-16 02:44:36,370 - INFO - root - Scraping Reuters World News (attempt 1)...
+2025-11-16 02:44:42,925 - WARNING - root - Attempt 1 failed for Reuters World News: Response ended prematurely
+2025-11-16 02:44:44,927 - INFO - root - Scraping Reuters World News (attempt 2)...
+2025-11-16 02:44:53,203 - WARNING - root - Attempt 2 failed for Reuters World News: Response ended prematurely
+2025-11-16 02:44:53,204 - ERROR - root - All attempts failed for Reuters World News: Response ended prematurely
+2025-11-16 02:44:53,205 - WARNING - root - ⚠️ No articles found from Reuters World News
+2025-11-16 02:44:54,207 - INFO - root - Scraping Al Jazeera English (attempt 1)...
+2025-11-16 02:44:58,294 - INFO - root - Found 0 articles from Al Jazeera English
+2025-11-16 02:44:58,309 - WARNING - root - ⚠️ No articles found from Al Jazeera English
+2025-11-16 02:44:59,311 - INFO - root - Scraping The Guardian World (attempt 1)...
+2025-11-16 02:45:05,669 - WARNING - root - Attempt 1 failed for The Guardian World: Response ended prematurely
+2025-11-16 02:45:07,670 - INFO - root - Scraping The Guardian World (attempt 2)...
+2025-11-16 02:45:17,103 - WARNING - root - Attempt 2 failed for The Guardian World: Response ended prematurely
+2025-11-16 02:45:17,104 - ERROR - root - All attempts failed for The Guardian World: Response ended prematurely
+2025-11-16 02:45:17,105 - WARNING - root - ⚠️ No articles found from The Guardian World
+2025-11-16 02:45:18,106 - INFO - root - Scraping The Hindu (India) (attempt 1)...
+2025-11-16 02:45:27,672 - INFO - root - Found 0 articles from The Hindu (India)
+2025-11-16 02:45:27,673 - WARNING - root - ⚠️ No articles found from The Hindu (India)
+2025-11-16 02:45:28,675 - INFO - root - Scraping CNN World (attempt 1)...
+2025-11-16 02:45:29,467 - WARNING - root - Attempt 1 failed for CNN World: 500 Server Error: Internal Server Error for url: https://api.allorigins.win/get?url=http%3A//rss.cnn.com/rss/edition.rss
+2025-11-16 02:45:31,469 - INFO - root - Scraping CNN World (attempt 2)...
+2025-11-16 02:45:38,221 - WARNING - root - Attempt 2 failed for CNN World: Response ended prematurely
+2025-11-16 02:45:38,222 - ERROR - root - All attempts failed for CNN World: Response ended prematurely
+2025-11-16 02:45:38,227 - WARNING - root - ⚠️ No articles found from CNN World
+2025-11-16 02:45:39,229 - INFO - root - Scraping NBC News World (attempt 1)...
+2025-11-16 02:45:46,444 - INFO - root - Found 15 articles from NBC News World
+2025-11-16 02:45:46,445 - INFO - root - ✅ Successfully got 15 articles from NBC News World
+2025-11-16 02:45:48,446 - INFO - root - Scraping DW News (Germany) (attempt 1)...
+2025-11-16 02:45:55,277 - WARNING - root - Attempt 1 failed for DW News (Germany): Response ended prematurely
+2025-11-16 02:45:57,278 - INFO - root - Scraping DW News (Germany) (attempt 2)...
+2025-11-16 02:46:07,585 - WARNING - root - Attempt 2 failed for DW News (Germany): Response ended prematurely
+2025-11-16 02:46:07,586 - ERROR - root - All attempts failed for DW News (Germany): Response ended prematurely
+2025-11-16 02:46:07,587 - WARNING - root - ⚠️ No articles found from DW News (Germany)
+2025-11-16 02:46:08,588 - INFO - root - Scraping Press TV (Iran) (attempt 1)...
+2025-11-16 02:46:16,910 - INFO - root - Found 15 articles from Press TV (Iran)
+2025-11-16 02:46:16,912 - INFO - root - ✅ Successfully got 15 articles from Press TV (Iran)
+2025-11-16 02:46:18,914 - INFO - root - Scraping Tehran Times (attempt 1)...
+2025-11-16 02:46:23,817 - INFO - root - Found 0 articles from Tehran Times
+2025-11-16 02:46:23,818 - WARNING - root - ⚠️ No articles found from Tehran Times
+2025-11-16 02:46:24,820 - INFO - root - Scraping Arab News (Saudi Arabia) (attempt 1)...
+2025-11-16 02:46:27,971 - WARNING - root - Attempt 1 failed for Arab News (Saudi Arabia): 500 Server Error: Internal Server Error for url: https://api.allorigins.win/get?url=https%3A//www.arabnews.com/rss.xml
+2025-11-16 02:46:29,974 - INFO - root - Scraping Arab News (Saudi Arabia) (attempt 2)...
+2025-11-16 02:46:31,269 - INFO - root - Found 0 articles from Arab News (Saudi Arabia)
+2025-11-16 02:46:31,270 - WARNING - root - ⚠️ No articles found from Arab News (Saudi Arabia)
+2025-11-16 02:46:32,271 - INFO - root - Scraping Jerusalem Post (attempt 1)...
+2025-11-16 02:46:38,315 - WARNING - root - Attempt 1 failed for Jerusalem Post: Response ended prematurely
+2025-11-16 02:46:40,317 - INFO - root - Scraping Jerusalem Post (attempt 2)...
+2025-11-16 02:46:49,477 - WARNING - root - Attempt 2 failed for Jerusalem Post: Response ended prematurely
+2025-11-16 02:46:49,478 - ERROR - root - All attempts failed for Jerusalem Post: Response ended prematurely
+2025-11-16 02:46:49,480 - WARNING - root - ⚠️ No articles found from Jerusalem Post
+2025-11-16 02:46:50,482 - INFO - root - Scraping Daily Sabah (Turkey) (attempt 1)...
+2025-11-16 02:46:59,755 - INFO - root - Found 0 articles from Daily Sabah (Turkey)
+2025-11-16 02:46:59,757 - WARNING - root - ⚠️ No articles found from Daily Sabah (Turkey)
+2025-11-16 02:47:00,759 - INFO - root - Scraping China Daily (attempt 1)...
+2025-11-16 02:47:07,753 - WARNING - root - Attempt 1 failed for China Daily: Response ended prematurely
+2025-11-16 02:47:09,756 - INFO - root - Scraping China Daily (attempt 2)...
+2025-11-16 02:47:26,922 - WARNING - root - Attempt 2 failed for China Daily: Response ended prematurely
+2025-11-16 02:47:26,923 - ERROR - root - All attempts failed for China Daily: Response ended prematurely
+2025-11-16 02:47:26,924 - WARNING - root - ⚠️ No articles found from China Daily
+2025-11-16 02:47:27,925 - INFO - root - Scraping completed: 2 successful, 12 failed
+2025-11-16 02:47:27,926 - INFO - root - Total unique articles: 30
+2025-11-16 02:47:30,380 - INFO - root - Scan completed. Found 30 articles, 6 approved.
+2025-11-16 02:49:29,784 - INFO - root - Tweet monitoring triggered
+2025-11-16 02:52:12,118 - ERROR - root - Application error: 'ModernTkinterDashboard' object has no attribute 'save_account_settings'
+2025-11-16 02:52:33,519 - ERROR - root - Application error: 'ModernTkinterDashboard' object has no attribute 'save_account_settings'
+2025-11-16 02:53:50,175 - INFO - root - Auto-scan triggered
+2025-11-16 02:53:50,176 - INFO - root - Auto-scan started
+2025-11-16 02:53:50,184 - INFO - root - Tweet monitoring triggered
+2025-11-16 02:53:50,184 - INFO - root - Tweet monitoring started
+2025-11-16 02:53:50,185 - INFO - root - Starting enhanced news scan...
+2025-11-16 02:53:50,191 - INFO - root - Starting enhanced scraping of 14 feeds...
+2025-11-16 02:53:50,202 - INFO - root - Scraping BBC News (attempt 1)...
+2025-11-16 02:53:55,855 - INFO - root - Found 0 articles from BBC News
+2025-11-16 02:53:55,857 - WARNING - root - ⚠️ No articles found from BBC News
+2025-11-16 02:53:56,859 - INFO - root - Scraping Reuters World News (attempt 1)...
+2025-11-16 02:54:03,116 - WARNING - root - Attempt 1 failed for Reuters World News: Response ended prematurely
+2025-11-16 02:54:05,117 - INFO - root - Scraping Reuters World News (attempt 2)...
+2025-11-16 02:54:13,431 - WARNING - root - Attempt 2 failed for Reuters World News: Response ended prematurely
+2025-11-16 02:54:13,432 - ERROR - root - All attempts failed for Reuters World News: Response ended prematurely
+2025-11-16 02:54:13,433 - WARNING - root - ⚠️ No articles found from Reuters World News
+2025-11-16 02:54:14,435 - INFO - root - Scraping Al Jazeera English (attempt 1)...
+2025-11-16 02:54:18,142 - INFO - root - Found 0 articles from Al Jazeera English
+2025-11-16 02:54:18,143 - WARNING - root - ⚠️ No articles found from Al Jazeera English
+2025-11-16 02:54:19,145 - INFO - root - Scraping The Guardian World (attempt 1)...
+2025-11-16 02:54:30,140 - WARNING - root - Attempt 1 failed for The Guardian World: Response ended prematurely
+2025-11-16 02:54:32,141 - INFO - root - Scraping The Guardian World (attempt 2)...
+2025-11-16 02:54:40,883 - WARNING - root - Attempt 2 failed for The Guardian World: Response ended prematurely
+2025-11-16 02:54:40,885 - ERROR - root - All attempts failed for The Guardian World: Response ended prematurely
+2025-11-16 02:54:40,886 - WARNING - root - ⚠️ No articles found from The Guardian World
+2025-11-16 02:54:41,887 - INFO - root - Scraping The Hindu (India) (attempt 1)...
+2025-11-16 02:54:51,720 - INFO - root - Found 0 articles from The Hindu (India)
+2025-11-16 02:54:51,722 - WARNING - root - ⚠️ No articles found from The Hindu (India)
+2025-11-16 02:54:52,723 - INFO - root - Scraping CNN World (attempt 1)...
+2025-11-16 02:54:53,754 - WARNING - root - Attempt 1 failed for CNN World: 500 Server Error: Internal Server Error for url: https://api.allorigins.win/get?url=http%3A//rss.cnn.com/rss/edition.rss
+2025-11-16 02:54:55,756 - INFO - root - Scraping CNN World (attempt 2)...
+2025-11-16 02:55:03,147 - WARNING - root - Attempt 2 failed for CNN World: Response ended prematurely
+2025-11-16 02:55:03,175 - ERROR - root - All attempts failed for CNN World: Response ended prematurely
+2025-11-16 02:55:03,195 - WARNING - root - ⚠️ No articles found from CNN World
+2025-11-16 02:55:04,228 - INFO - root - Scraping NBC News World (attempt 1)...
+2025-11-16 02:55:11,717 - INFO - root - Found 15 articles from NBC News World
+2025-11-16 02:55:11,718 - INFO - root - ✅ Successfully got 15 articles from NBC News World
+2025-11-16 02:55:13,720 - INFO - root - Scraping DW News (Germany) (attempt 1)...
+2025-11-16 02:55:20,738 - WARNING - root - Attempt 1 failed for DW News (Germany): Response ended prematurely
+2025-11-16 02:55:22,740 - INFO - root - Scraping DW News (Germany) (attempt 2)...
+2025-11-16 02:55:30,719 - WARNING - root - Attempt 2 failed for DW News (Germany): Response ended prematurely
+2025-11-16 02:55:30,721 - ERROR - root - All attempts failed for DW News (Germany): Response ended prematurely
+2025-11-16 02:55:30,722 - WARNING - root - ⚠️ No articles found from DW News (Germany)
+2025-11-16 02:55:31,724 - INFO - root - Scraping Press TV (Iran) (attempt 1)...
+2025-11-16 02:55:38,038 - INFO - root - Found 15 articles from Press TV (Iran)
+2025-11-16 02:55:38,039 - INFO - root - ✅ Successfully got 15 articles from Press TV (Iran)
+2025-11-16 02:55:40,041 - INFO - root - Scraping Tehran Times (attempt 1)...
+2025-11-16 02:55:43,922 - INFO - root - Found 0 articles from Tehran Times
+2025-11-16 02:55:43,923 - WARNING - root - ⚠️ No articles found from Tehran Times
+2025-11-16 02:55:44,925 - INFO - root - Scraping Arab News (Saudi Arabia) (attempt 1)...
+2025-11-16 02:55:46,095 - INFO - root - Found 0 articles from Arab News (Saudi Arabia)
+2025-11-16 02:55:46,097 - WARNING - root - ⚠️ No articles found from Arab News (Saudi Arabia)
+2025-11-16 02:55:47,098 - INFO - root - Scraping Jerusalem Post (attempt 1)...
+2025-11-16 02:55:53,704 - WARNING - root - Attempt 1 failed for Jerusalem Post: Response ended prematurely
+2025-11-16 02:55:55,706 - INFO - root - Scraping Jerusalem Post (attempt 2)...
+2025-11-16 02:56:03,975 - WARNING - root - Attempt 2 failed for Jerusalem Post: Response ended prematurely
+2025-11-16 02:56:03,976 - ERROR - root - All attempts failed for Jerusalem Post: Response ended prematurely
+2025-11-16 02:56:03,977 - WARNING - root - ⚠️ No articles found from Jerusalem Post
+2025-11-16 02:56:04,978 - INFO - root - Scraping Daily Sabah (Turkey) (attempt 1)...
+2025-11-16 02:56:16,361 - INFO - root - Found 0 articles from Daily Sabah (Turkey)
+2025-11-16 02:56:16,362 - WARNING - root - ⚠️ No articles found from Daily Sabah (Turkey)
+2025-11-16 02:56:17,364 - INFO - root - Scraping China Daily (attempt 1)...
+2025-11-16 02:56:24,547 - WARNING - root - Attempt 1 failed for China Daily: Response ended prematurely
+2025-11-16 02:56:26,549 - INFO - root - Scraping China Daily (attempt 2)...
+2025-11-16 02:56:35,214 - WARNING - root - Attempt 2 failed for China Daily: Response ended prematurely
+2025-11-16 02:56:35,215 - ERROR - root - All attempts failed for China Daily: Response ended prematurely
+2025-11-16 02:56:35,216 - WARNING - root - ⚠️ No articles found from China Daily
+2025-11-16 02:56:36,218 - INFO - root - Scraping completed: 2 successful, 12 failed
+2025-11-16 02:56:36,219 - INFO - root - Total unique articles: 30
+2025-11-16 02:56:37,615 - INFO - root - Scan completed. Found 30 articles, 6 approved.
+2025-11-16 02:57:21,079 - INFO - root - Twitter client initialized - Access Level: Essential (Free) Tier
+2025-11-16 02:58:02,493 - INFO - root - Twitter client initialized - Access Level: Essential (Free) Tier
+2025-11-16 02:58:50,188 - INFO - root - Tweet monitoring triggered
+2025-11-16 02:58:53,283 - WARNING - root - API access limited, using simulated tweets for user1
+2025-11-16 02:58:55,200 - WARNING - root - API access limited, using simulated tweets for user2
+2025-11-16 02:58:57,110 - WARNING - root - API access limited, using simulated tweets for user3
+2025-11-16 02:58:57,344 - INFO - root - Tweet monitoring: Found 9 tweets, 9 approved.
+2025-11-16 03:01:37,619 - INFO - root - Auto-scan triggered
+2025-11-16 03:01:37,622 - INFO - root - Starting enhanced news scan...
+2025-11-16 03:01:37,625 - INFO - root - Starting enhanced scraping of 14 feeds...
+2025-11-16 03:01:37,628 - INFO - root - Scraping BBC News (attempt 1)...
+2025-11-16 03:01:42,016 - INFO - root - Found 0 articles from BBC News
+2025-11-16 03:01:42,017 - WARNING - root - ⚠️ No articles found from BBC News
+2025-11-16 03:01:43,018 - INFO - root - Scraping Reuters World News (attempt 1)...
+2025-11-16 03:01:50,498 - WARNING - root - Attempt 1 failed for Reuters World News: Response ended prematurely
+2025-11-16 03:01:52,499 - INFO - root - Scraping Reuters World News (attempt 2)...
+2025-11-16 03:02:00,215 - WARNING - root - Attempt 2 failed for Reuters World News: Response ended prematurely
+2025-11-16 03:02:00,217 - ERROR - root - All attempts failed for Reuters World News: Response ended prematurely
+2025-11-16 03:02:00,218 - WARNING - root - ⚠️ No articles found from Reuters World News
+2025-11-16 03:02:01,219 - INFO - root - Scraping Al Jazeera English (attempt 1)...
+2025-11-16 03:02:05,057 - INFO - root - Found 0 articles from Al Jazeera English
+2025-11-16 03:02:05,059 - WARNING - root - ⚠️ No articles found from Al Jazeera English
+2025-11-16 03:02:06,061 - INFO - root - Scraping The Guardian World (attempt 1)...
+2025-11-16 03:02:12,156 - WARNING - root - Attempt 1 failed for The Guardian World: 408 Client Error: Request Timeout for url: https://api.allorigins.win/get?url=https%3A//www.theguardian.com/world/rss
+2025-11-16 03:02:14,158 - INFO - root - Scraping The Guardian World (attempt 2)...
+2025-11-16 03:02:20,494 - WARNING - root - Attempt 2 failed for The Guardian World: Response ended prematurely
+2025-11-16 03:02:20,496 - ERROR - root - All attempts failed for The Guardian World: Response ended prematurely
+2025-11-16 03:02:20,505 - WARNING - root - ⚠️ No articles found from The Guardian World
+2025-11-16 03:02:21,508 - INFO - root - Scraping The Hindu (India) (attempt 1)...
+2025-11-16 03:02:33,752 - INFO - root - Found 0 articles from The Hindu (India)
+2025-11-16 03:02:33,754 - WARNING - root - ⚠️ No articles found from The Hindu (India)
+2025-11-16 03:02:34,756 - INFO - root - Scraping CNN World (attempt 1)...
+2025-11-16 03:02:45,905 - INFO - root - Found 0 articles from CNN World
+2025-11-16 03:02:45,906 - WARNING - root - ⚠️ No articles found from CNN World
+2025-11-16 03:02:46,909 - INFO - root - Scraping NBC News World (attempt 1)...
+2025-11-16 03:02:52,620 - INFO - root - Found 15 articles from NBC News World
+2025-11-16 03:02:52,622 - INFO - root - ✅ Successfully got 15 articles from NBC News World
+2025-11-16 03:02:54,624 - INFO - root - Scraping DW News (Germany) (attempt 1)...
+2025-11-16 03:03:02,215 - INFO - root - Found 0 articles from DW News (Germany)
+2025-11-16 03:03:02,217 - WARNING - root - ⚠️ No articles found from DW News (Germany)
+2025-11-16 03:03:03,219 - INFO - root - Scraping Press TV (Iran) (attempt 1)...
+2025-11-16 03:03:07,935 - INFO - root - Found 15 articles from Press TV (Iran)
+2025-11-16 03:03:07,936 - INFO - root - ✅ Successfully got 15 articles from Press TV (Iran)
+2025-11-16 03:03:09,938 - INFO - root - Scraping Tehran Times (attempt 1)...
+2025-11-16 03:03:14,211 - INFO - root - Found 0 articles from Tehran Times
+2025-11-16 03:03:14,213 - WARNING - root - ⚠️ No articles found from Tehran Times
+2025-11-16 03:03:15,214 - INFO - root - Scraping Arab News (Saudi Arabia) (attempt 1)...
+2025-11-16 03:03:16,534 - INFO - root - Found 0 articles from Arab News (Saudi Arabia)
+2025-11-16 03:03:16,535 - WARNING - root - ⚠️ No articles found from Arab News (Saudi Arabia)
+2025-11-16 03:03:17,537 - INFO - root - Scraping Jerusalem Post (attempt 1)...
+2025-11-16 03:03:18,451 - WARNING - root - Attempt 1 failed for Jerusalem Post: 500 Server Error: Internal Server Error for url: https://api.allorigins.win/get?url=https%3A//www.jpost.com/Rss/RssFeedsHeadlines
+2025-11-16 03:03:20,453 - INFO - root - Scraping Jerusalem Post (attempt 2)...
+2025-11-16 03:03:29,330 - WARNING - root - Attempt 2 failed for Jerusalem Post: Response ended prematurely
+2025-11-16 03:03:29,331 - ERROR - root - All attempts failed for Jerusalem Post: Response ended prematurely
+2025-11-16 03:03:29,336 - WARNING - root - ⚠️ No articles found from Jerusalem Post
+2025-11-16 03:03:30,338 - INFO - root - Scraping Daily Sabah (Turkey) (attempt 1)...
+2025-11-16 03:03:33,168 - WARNING - root - Attempt 1 failed for Daily Sabah (Turkey): 500 Server Error: Internal Server Error for url: https://api.allorigins.win/get?url=https%3A//www.dailysabah.com/rss
+2025-11-16 03:03:35,170 - INFO - root - Scraping Daily Sabah (Turkey) (attempt 2)...
+2025-11-16 03:03:43,389 - INFO - root - Found 0 articles from Daily Sabah (Turkey)
+2025-11-16 03:03:43,390 - WARNING - root - ⚠️ No articles found from Daily Sabah (Turkey)
+2025-11-16 03:03:44,392 - INFO - root - Scraping China Daily (attempt 1)...
+2025-11-16 03:03:57,347 - INFO - root - Tweet monitoring triggered
+2025-11-16 03:03:59,420 - WARNING - root - API access limited, using simulated tweets for user1
+2025-11-16 03:03:59,452 - WARNING - root - Attempt 1 failed for China Daily: Response ended prematurely
+2025-11-16 03:04:01,306 - WARNING - root - API access limited, using simulated tweets for user2
+2025-11-16 03:04:01,454 - INFO - root - Scraping China Daily (attempt 2)...
+2025-11-16 03:04:03,203 - WARNING - root - API access limited, using simulated tweets for user3
+2025-11-16 03:04:03,491 - INFO - root - Tweet monitoring: Found 9 tweets, 9 approved.
+2025-11-16 03:04:12,279 - WARNING - root - Attempt 2 failed for China Daily: 408 Client Error: Request Timeout for url: https://api.allorigins.win/get?url=https%3A//www.chinadaily.com.cn/rss/world_rss.xml
+2025-11-16 03:04:12,281 - ERROR - root - All attempts failed for China Daily: 408 Client Error: Request Timeout for url: https://api.allorigins.win/get?url=https%3A//www.chinadaily.com.cn/rss/world_rss.xml
+2025-11-16 03:04:12,283 - WARNING - root - ⚠️ No articles found from China Daily
+2025-11-16 03:04:13,285 - INFO - root - Scraping completed: 2 successful, 12 failed
+2025-11-16 03:04:13,287 - INFO - root - Total unique articles: 30
+2025-11-16 03:04:14,815 - INFO - root - Scan completed. Found 30 articles, 6 approved.
+2025-11-16 03:09:03,494 - INFO - root - Tweet monitoring triggered
+2025-11-16 03:09:05,985 - WARNING - root - API access limited, using simulated tweets for user1
+2025-11-16 03:09:08,176 - WARNING - root - API access limited, using simulated tweets for user2
+2025-11-16 03:09:10,148 - WARNING - root - API access limited, using simulated tweets for user3
+2025-11-16 03:09:10,438 - INFO - root - Tweet monitoring: Found 9 tweets, 9 approved.
+2025-11-16 03:09:14,818 - INFO - root - Auto-scan triggered
+2025-11-16 03:09:14,821 - INFO - root - Starting enhanced news scan...
+2025-11-16 03:09:14,825 - INFO - root - Starting enhanced scraping of 14 feeds...
+2025-11-16 03:09:14,826 - INFO - root - Scraping BBC News (attempt 1)...
+2025-11-16 03:09:17,642 - INFO - root - Found 0 articles from BBC News
+2025-11-16 03:09:17,643 - WARNING - root - ⚠️ No articles found from BBC News
+2025-11-16 03:09:18,645 - INFO - root - Scraping Reuters World News (attempt 1)...
+2025-11-16 03:09:25,275 - WARNING - root - Attempt 1 failed for Reuters World News: Response ended prematurely
+2025-11-16 03:09:27,277 - INFO - root - Scraping Reuters World News (attempt 2)...
+2025-11-16 03:09:35,518 - WARNING - root - Attempt 2 failed for Reuters World News: Response ended prematurely
+2025-11-16 03:09:35,520 - ERROR - root - All attempts failed for Reuters World News: Response ended prematurely
+2025-11-16 03:09:35,522 - WARNING - root - ⚠️ No articles found from Reuters World News
+2025-11-16 03:09:36,524 - INFO - root - Scraping Al Jazeera English (attempt 1)...
+2025-11-16 03:09:40,365 - INFO - root - Found 0 articles from Al Jazeera English
+2025-11-16 03:09:40,367 - WARNING - root - ⚠️ No articles found from Al Jazeera English
+2025-11-16 03:09:41,368 - INFO - root - Scraping The Guardian World (attempt 1)...
+2025-11-16 03:09:48,218 - WARNING - root - Attempt 1 failed for The Guardian World: Response ended prematurely
+2025-11-16 03:09:50,220 - INFO - root - Scraping The Guardian World (attempt 2)...
+2025-11-16 03:09:58,628 - WARNING - root - Attempt 2 failed for The Guardian World: Response ended prematurely
+2025-11-16 03:09:58,629 - ERROR - root - All attempts failed for The Guardian World: Response ended prematurely
+2025-11-16 03:09:58,630 - WARNING - root - ⚠️ No articles found from The Guardian World
+2025-11-16 03:09:59,631 - INFO - root - Scraping The Hindu (India) (attempt 1)...
+2025-11-16 03:10:09,466 - INFO - root - Found 0 articles from The Hindu (India)
+2025-11-16 03:10:09,467 - WARNING - root - ⚠️ No articles found from The Hindu (India)
+2025-11-16 03:10:10,468 - INFO - root - Scraping CNN World (attempt 1)...
+2025-11-16 03:10:21,722 - INFO - root - Found 0 articles from CNN World
+2025-11-16 03:10:21,726 - WARNING - root - ⚠️ No articles found from CNN World
+2025-11-16 03:10:22,729 - INFO - root - Scraping NBC News World (attempt 1)...
+2025-11-16 03:10:28,585 - INFO - root - Found 15 articles from NBC News World
+2025-11-16 03:10:28,586 - INFO - root - ✅ Successfully got 15 articles from NBC News World
+2025-11-16 03:10:30,587 - INFO - root - Scraping DW News (Germany) (attempt 1)...
+2025-11-16 03:10:39,488 - INFO - root - Found 0 articles from DW News (Germany)
+2025-11-16 03:10:39,489 - WARNING - root - ⚠️ No articles found from DW News (Germany)
+2025-11-16 03:10:40,490 - INFO - root - Scraping Press TV (Iran) (attempt 1)...
+2025-11-16 03:10:45,463 - INFO - root - Found 15 articles from Press TV (Iran)
+2025-11-16 03:10:45,464 - INFO - root - ✅ Successfully got 15 articles from Press TV (Iran)
+2025-11-16 03:10:47,466 - INFO - root - Scraping Tehran Times (attempt 1)...
+2025-11-16 03:10:49,297 - WARNING - root - Attempt 1 failed for Tehran Times: 500 Server Error: Internal Server Error for url: https://api.allorigins.win/get?url=https%3A//www.tehrantimes.com/rss
+2025-11-16 03:10:51,299 - INFO - root - Scraping Tehran Times (attempt 2)...
+2025-11-16 03:10:54,093 - WARNING - root - Attempt 2 failed for Tehran Times: 500 Server Error: Internal Server Error for url: https://api.allorigins.win/get?url=https%3A//www.tehrantimes.com/rss
+2025-11-16 03:10:54,095 - ERROR - root - All attempts failed for Tehran Times: 500 Server Error: Internal Server Error for url: https://api.allorigins.win/get?url=https%3A//www.tehrantimes.com/rss
+2025-11-16 03:10:54,096 - WARNING - root - ⚠️ No articles found from Tehran Times
+2025-11-16 03:10:55,098 - INFO - root - Scraping Arab News (Saudi Arabia) (attempt 1)...
+2025-11-16 03:10:56,956 - INFO - root - Found 0 articles from Arab News (Saudi Arabia)
+2025-11-16 03:10:56,957 - WARNING - root - ⚠️ No articles found from Arab News (Saudi Arabia)
+2025-11-16 03:10:57,958 - INFO - root - Scraping Jerusalem Post (attempt 1)...
+2025-11-16 03:11:04,882 - WARNING - root - Attempt 1 failed for Jerusalem Post: Response ended prematurely
+2025-11-16 03:11:06,883 - INFO - root - Scraping Jerusalem Post (attempt 2)...
+2025-11-16 03:11:14,275 - WARNING - root - Attempt 2 failed for Jerusalem Post: Response ended prematurely
+2025-11-16 03:11:14,276 - ERROR - root - All attempts failed for Jerusalem Post: Response ended prematurely
+2025-11-16 03:11:14,278 - WARNING - root - ⚠️ No articles found from Jerusalem Post
+2025-11-16 03:11:15,279 - INFO - root - Scraping Daily Sabah (Turkey) (attempt 1)...
+2025-11-16 03:11:26,111 - INFO - root - Found 0 articles from Daily Sabah (Turkey)
+2025-11-16 03:11:26,112 - WARNING - root - ⚠️ No articles found from Daily Sabah (Turkey)
+2025-11-16 03:11:27,113 - INFO - root - Scraping China Daily (attempt 1)...
+2025-11-16 03:11:34,110 - WARNING - root - Attempt 1 failed for China Daily: Response ended prematurely
+2025-11-16 03:11:36,113 - INFO - root - Scraping China Daily (attempt 2)...
+2025-11-16 03:11:44,353 - WARNING - root - Attempt 2 failed for China Daily: Response ended prematurely
+2025-11-16 03:11:44,355 - ERROR - root - All attempts failed for China Daily: Response ended prematurely
+2025-11-16 03:11:44,356 - WARNING - root - ⚠️ No articles found from China Daily
+2025-11-16 03:11:45,357 - INFO - root - Scraping completed: 2 successful, 12 failed
+2025-11-16 03:11:45,358 - INFO - root - Total unique articles: 30
+2025-11-16 03:11:46,835 - INFO - root - Scan completed. Found 30 articles, 6 approved.
+2025-11-16 03:14:10,440 - INFO - root - Tweet monitoring triggered
+2025-11-16 03:14:12,427 - WARNING - root - API access limited, using simulated tweets for user1
+2025-11-16 03:14:14,345 - WARNING - root - API access limited, using simulated tweets for user2
+2025-11-16 03:14:16,257 - WARNING - root - API access limited, using simulated tweets for user3
+2025-11-16 03:14:16,552 - INFO - root - Tweet monitoring: Found 9 tweets, 9 approved.
+2025-11-16 03:16:53,262 - ERROR - root - Application error: 'ModernTkinterDashboard' object has no attribute 'load_settings'
+2025-11-16 03:39:55,289 - INFO - root - Auto-scan triggered
+2025-11-16 03:39:55,289 - INFO - root - Auto-scan started
+2025-11-16 03:39:55,292 - INFO - root - Tweet monitoring started
+2025-11-16 03:39:55,293 - INFO - root - Starting enhanced news scan...
+2025-11-16 03:39:55,297 - INFO - root - Starting enhanced scraping of 14 feeds...
+2025-11-16 03:39:55,304 - INFO - root - Scraping BBC News (attempt 1)...
+2025-11-16 03:40:01,632 - INFO - root - Found 0 articles from BBC News
+2025-11-16 03:40:01,634 - WARNING - root - ⚠️ No articles found from BBC News
+2025-11-16 03:40:02,636 - INFO - root - Scraping Reuters World News (attempt 1)...
+2025-11-16 03:40:09,231 - WARNING - root - Attempt 1 failed for Reuters World News: Response ended prematurely
+2025-11-16 03:40:11,233 - INFO - root - Scraping Reuters World News (attempt 2)...
+2025-11-16 03:40:19,434 - WARNING - root - Attempt 2 failed for Reuters World News: Response ended prematurely
+2025-11-16 03:40:19,436 - ERROR - root - All attempts failed for Reuters World News: Response ended prematurely
+2025-11-16 03:40:19,437 - WARNING - root - ⚠️ No articles found from Reuters World News
+2025-11-16 03:40:20,439 - INFO - root - Scraping Al Jazeera English (attempt 1)...
+2025-11-16 03:40:24,506 - INFO - root - Found 0 articles from Al Jazeera English
+2025-11-16 03:40:24,507 - WARNING - root - ⚠️ No articles found from Al Jazeera English
+2025-11-16 03:40:25,509 - INFO - root - Scraping The Guardian World (attempt 1)...
+2025-11-16 03:40:33,324 - WARNING - root - Attempt 1 failed for The Guardian World: Response ended prematurely
+2025-11-16 03:40:35,326 - INFO - root - Scraping The Guardian World (attempt 2)...
+2025-11-16 03:40:51,351 - WARNING - root - Attempt 2 failed for The Guardian World: Response ended prematurely
+2025-11-16 03:40:51,352 - ERROR - root - All attempts failed for The Guardian World: Response ended prematurely
+2025-11-16 03:40:51,354 - WARNING - root - ⚠️ No articles found from The Guardian World
+2025-11-16 03:40:52,356 - INFO - root - Scraping The Hindu (India) (attempt 1)...
+2025-11-16 03:41:02,285 - INFO - root - Found 0 articles from The Hindu (India)
+2025-11-16 03:41:02,287 - WARNING - root - ⚠️ No articles found from The Hindu (India)
+2025-11-16 03:41:03,289 - INFO - root - Scraping CNN World (attempt 1)...
+2025-11-16 03:41:10,717 - WARNING - root - Attempt 1 failed for CNN World: Response ended prematurely
+2025-11-16 03:41:12,719 - INFO - root - Scraping CNN World (attempt 2)...
+2025-11-16 03:41:21,117 - WARNING - root - Attempt 2 failed for CNN World: Response ended prematurely
+2025-11-16 03:41:21,118 - ERROR - root - All attempts failed for CNN World: Response ended prematurely
+2025-11-16 03:41:21,120 - WARNING - root - ⚠️ No articles found from CNN World
+2025-11-16 03:41:22,121 - INFO - root - Scraping NBC News World (attempt 1)...
+2025-11-16 03:41:29,649 - INFO - root - Found 15 articles from NBC News World
+2025-11-16 03:41:29,650 - INFO - root - ✅ Successfully got 15 articles from NBC News World
+2025-11-16 03:41:31,652 - INFO - root - Scraping DW News (Germany) (attempt 1)...
+2025-11-16 03:41:32,777 - WARNING - root - Attempt 1 failed for DW News (Germany): 500 Server Error: Internal Server Error for url: https://api.allorigins.win/get?url=https%3A//rss.dw.com/rdf/rss-en-all
+2025-11-16 03:41:34,779 - INFO - root - Scraping DW News (Germany) (attempt 2)...
+2025-11-16 03:41:41,512 - WARNING - root - Attempt 2 failed for DW News (Germany): Response ended prematurely
+2025-11-16 03:41:41,514 - ERROR - root - All attempts failed for DW News (Germany): Response ended prematurely
+2025-11-16 03:41:41,523 - WARNING - root - ⚠️ No articles found from DW News (Germany)
+2025-11-16 03:41:42,525 - INFO - root - Scraping Press TV (Iran) (attempt 1)...
+2025-11-16 03:41:48,802 - INFO - root - Found 15 articles from Press TV (Iran)
+2025-11-16 03:41:48,803 - INFO - root - ✅ Successfully got 15 articles from Press TV (Iran)
+2025-11-16 03:41:50,805 - INFO - root - Scraping Tehran Times (attempt 1)...
+2025-11-16 03:41:55,123 - INFO - root - Twitter client initialized - Access Level: Limited
+2025-11-16 03:41:55,347 - INFO - root - Found 0 articles from Tehran Times
+2025-11-16 03:41:55,348 - WARNING - root - ⚠️ No articles found from Tehran Times
+2025-11-16 03:41:56,350 - INFO - root - Scraping Arab News (Saudi Arabia) (attempt 1)...
+2025-11-16 03:41:57,467 - INFO - root - Found 0 articles from Arab News (Saudi Arabia)
+2025-11-16 03:41:57,469 - WARNING - root - ⚠️ No articles found from Arab News (Saudi Arabia)
+2025-11-16 03:41:58,471 - INFO - root - Scraping Jerusalem Post (attempt 1)...
+2025-11-16 03:41:59,387 - WARNING - root - Attempt 1 failed for Jerusalem Post: 500 Server Error: Internal Server Error for url: https://api.allorigins.win/get?url=https%3A//www.jpost.com/Rss/RssFeedsHeadlines
+2025-11-16 03:42:01,389 - INFO - root - Scraping Jerusalem Post (attempt 2)...
+2025-11-16 03:42:07,759 - WARNING - root - Attempt 2 failed for Jerusalem Post: Response ended prematurely
+2025-11-16 03:42:07,760 - ERROR - root - All attempts failed for Jerusalem Post: Response ended prematurely
+2025-11-16 03:42:07,764 - WARNING - root - ⚠️ No articles found from Jerusalem Post
+2025-11-16 03:42:08,765 - INFO - root - Scraping Daily Sabah (Turkey) (attempt 1)...
+2025-11-16 03:42:11,844 - INFO - root - Twitter client initialized - Access Level: Limited
+2025-11-16 03:42:13,705 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:42:19,517 - INFO - root - Found 0 articles from Daily Sabah (Turkey)
+2025-11-16 03:42:19,519 - WARNING - root - ⚠️ No articles found from Daily Sabah (Turkey)
+2025-11-16 03:42:20,521 - INFO - root - Scraping China Daily (attempt 1)...
+2025-11-16 03:42:36,404 - WARNING - root - Attempt 1 failed for China Daily: HTTPSConnectionPool(host='api.allorigins.win', port=443): Read timed out. (read timeout=15)
+2025-11-16 03:42:38,406 - INFO - root - Scraping China Daily (attempt 2)...
+2025-11-16 03:42:51,111 - WARNING - root - Attempt 2 failed for China Daily: Response ended prematurely
+2025-11-16 03:42:51,112 - ERROR - root - All attempts failed for China Daily: Response ended prematurely
+2025-11-16 03:42:51,113 - WARNING - root - ⚠️ No articles found from China Daily
+2025-11-16 03:42:52,115 - INFO - root - Scraping completed: 2 successful, 12 failed
+2025-11-16 03:42:52,116 - INFO - root - Total unique articles: 30
+2025-11-16 03:42:52,924 - INFO - root - Scan completed. Found 30 articles, 6 approved.
+2025-11-16 03:42:57,360 - INFO - root - Twitter client initialized - Access Level: Limited
+2025-11-16 03:43:34,057 - INFO - root - Twitter client initialized - Access Level: Limited
+2025-11-16 03:43:36,042 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:43:57,598 - INFO - root - Twitter client initialized - Access Level: Limited
+2025-11-16 03:43:57,603 - INFO - root - Twitter client initialized - Access Level: Limited
+2025-11-16 03:44:20,287 - INFO - root - Twitter client initialized - Access Level: Limited
+2025-11-16 03:44:25,232 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:44:27,164 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:44:29,076 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:44:55,292 - INFO - root - Tweet monitoring triggered
+2025-11-16 03:44:57,284 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:44:59,203 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:45:01,164 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:45:01,638 - INFO - root - Tweet monitoring: Found 18 tweets, 18 approved.
+2025-11-16 03:46:51,731 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:46:53,743 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:46:57,807 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:47:52,928 - INFO - root - Auto-scan triggered
+2025-11-16 03:47:52,932 - INFO - root - Starting enhanced news scan...
+2025-11-16 03:47:52,936 - INFO - root - Starting enhanced scraping of 14 feeds...
+2025-11-16 03:47:52,939 - INFO - root - Scraping BBC News (attempt 1)...
+2025-11-16 03:47:57,244 - INFO - root - Found 0 articles from BBC News
+2025-11-16 03:47:57,246 - WARNING - root - ⚠️ No articles found from BBC News
+2025-11-16 03:47:58,248 - INFO - root - Scraping Reuters World News (attempt 1)...
+2025-11-16 03:48:04,764 - WARNING - root - Attempt 1 failed for Reuters World News: Response ended prematurely
+2025-11-16 03:48:06,767 - INFO - root - Scraping Reuters World News (attempt 2)...
+2025-11-16 03:48:14,930 - WARNING - root - Attempt 2 failed for Reuters World News: Response ended prematurely
+2025-11-16 03:48:14,932 - ERROR - root - All attempts failed for Reuters World News: Response ended prematurely
+2025-11-16 03:48:14,933 - WARNING - root - ⚠️ No articles found from Reuters World News
+2025-11-16 03:48:15,935 - INFO - root - Scraping Al Jazeera English (attempt 1)...
+2025-11-16 03:48:20,296 - INFO - root - Found 0 articles from Al Jazeera English
+2025-11-16 03:48:20,297 - WARNING - root - ⚠️ No articles found from Al Jazeera English
+2025-11-16 03:48:21,298 - INFO - root - Scraping The Guardian World (attempt 1)...
+2025-11-16 03:48:27,669 - WARNING - root - Attempt 1 failed for The Guardian World: Response ended prematurely
+2025-11-16 03:48:29,671 - INFO - root - Scraping The Guardian World (attempt 2)...
+2025-11-16 03:48:38,339 - WARNING - root - Attempt 2 failed for The Guardian World: Response ended prematurely
+2025-11-16 03:48:38,341 - ERROR - root - All attempts failed for The Guardian World: Response ended prematurely
+2025-11-16 03:48:38,343 - WARNING - root - ⚠️ No articles found from The Guardian World
+2025-11-16 03:48:39,345 - INFO - root - Scraping The Hindu (India) (attempt 1)...
+2025-11-16 03:48:48,783 - INFO - root - Found 0 articles from The Hindu (India)
+2025-11-16 03:48:48,784 - WARNING - root - ⚠️ No articles found from The Hindu (India)
+2025-11-16 03:48:49,786 - INFO - root - Scraping CNN World (attempt 1)...
+2025-11-16 03:48:56,527 - WARNING - root - Attempt 1 failed for CNN World: Response ended prematurely
+2025-11-16 03:48:58,530 - INFO - root - Scraping CNN World (attempt 2)...
+2025-11-16 03:49:06,502 - WARNING - root - Attempt 2 failed for CNN World: Response ended prematurely
+2025-11-16 03:49:06,503 - ERROR - root - All attempts failed for CNN World: Response ended prematurely
+2025-11-16 03:49:06,505 - WARNING - root - ⚠️ No articles found from CNN World
+2025-11-16 03:49:07,507 - INFO - root - Scraping NBC News World (attempt 1)...
+2025-11-16 03:49:14,873 - INFO - root - Found 15 articles from NBC News World
+2025-11-16 03:49:14,875 - INFO - root - ✅ Successfully got 15 articles from NBC News World
+2025-11-16 03:49:16,877 - INFO - root - Scraping DW News (Germany) (attempt 1)...
+2025-11-16 03:49:23,787 - WARNING - root - Attempt 1 failed for DW News (Germany): Response ended prematurely
+2025-11-16 03:49:25,790 - INFO - root - Scraping DW News (Germany) (attempt 2)...
+2025-11-16 03:49:33,955 - WARNING - root - Attempt 2 failed for DW News (Germany): Response ended prematurely
+2025-11-16 03:49:33,957 - ERROR - root - All attempts failed for DW News (Germany): Response ended prematurely
+2025-11-16 03:49:33,959 - WARNING - root - ⚠️ No articles found from DW News (Germany)
+2025-11-16 03:49:34,961 - INFO - root - Scraping Press TV (Iran) (attempt 1)...
+2025-11-16 03:49:41,194 - INFO - root - Found 15 articles from Press TV (Iran)
+2025-11-16 03:49:41,195 - INFO - root - ✅ Successfully got 15 articles from Press TV (Iran)
+2025-11-16 03:49:43,197 - INFO - root - Scraping Tehran Times (attempt 1)...
+2025-11-16 03:49:49,579 - INFO - root - Found 0 articles from Tehran Times
+2025-11-16 03:49:49,581 - WARNING - root - ⚠️ No articles found from Tehran Times
+2025-11-16 03:49:50,583 - INFO - root - Scraping Arab News (Saudi Arabia) (attempt 1)...
+2025-11-16 03:49:51,363 - INFO - root - Found 0 articles from Arab News (Saudi Arabia)
+2025-11-16 03:49:51,364 - WARNING - root - ⚠️ No articles found from Arab News (Saudi Arabia)
+2025-11-16 03:49:52,366 - INFO - root - Scraping Jerusalem Post (attempt 1)...
+2025-11-16 03:49:58,826 - WARNING - root - Attempt 1 failed for Jerusalem Post: Response ended prematurely
+2025-11-16 03:50:00,829 - INFO - root - Scraping Jerusalem Post (attempt 2)...
+2025-11-16 03:50:09,391 - WARNING - root - Attempt 2 failed for Jerusalem Post: Response ended prematurely
+2025-11-16 03:50:09,392 - ERROR - root - All attempts failed for Jerusalem Post: Response ended prematurely
+2025-11-16 03:50:09,394 - WARNING - root - ⚠️ No articles found from Jerusalem Post
+2025-11-16 03:50:10,396 - INFO - root - Scraping Daily Sabah (Turkey) (attempt 1)...
+2025-11-16 03:50:22,150 - INFO - root - Found 0 articles from Daily Sabah (Turkey)
+2025-11-16 03:50:22,152 - WARNING - root - ⚠️ No articles found from Daily Sabah (Turkey)
+2025-11-16 03:50:23,155 - INFO - root - Scraping China Daily (attempt 1)...
+2025-11-16 03:50:31,291 - WARNING - root - Attempt 1 failed for China Daily: Response ended prematurely
+2025-11-16 03:50:33,293 - INFO - root - Scraping China Daily (attempt 2)...
+2025-11-16 03:50:43,292 - WARNING - root - Attempt 2 failed for China Daily: Response ended prematurely
+2025-11-16 03:50:43,293 - ERROR - root - All attempts failed for China Daily: Response ended prematurely
+2025-11-16 03:50:43,295 - WARNING - root - ⚠️ No articles found from China Daily
+2025-11-16 03:50:44,298 - INFO - root - Scraping completed: 2 successful, 12 failed
+2025-11-16 03:50:44,299 - INFO - root - Total unique articles: 30
+2025-11-16 03:50:45,579 - INFO - root - Scan completed. Found 30 articles, 6 approved.
+2025-11-16 03:54:00,316 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:54:02,313 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:54:06,339 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:55:45,639 - INFO - root - Auto-scan triggered
+2025-11-16 03:55:45,644 - INFO - root - Starting enhanced news scan...
+2025-11-16 03:55:45,648 - INFO - root - Starting enhanced scraping of 14 feeds...
+2025-11-16 03:55:45,651 - INFO - root - Scraping BBC News (attempt 1)...
+2025-11-16 03:55:52,799 - INFO - root - Found 0 articles from BBC News
+2025-11-16 03:55:52,800 - WARNING - root - ⚠️ No articles found from BBC News
+2025-11-16 03:55:53,802 - INFO - root - Scraping Reuters World News (attempt 1)...
+2025-11-16 03:56:00,241 - WARNING - root - Attempt 1 failed for Reuters World News: Response ended prematurely
+2025-11-16 03:56:02,243 - INFO - root - Scraping Reuters World News (attempt 2)...
+2025-11-16 03:56:11,681 - WARNING - root - Attempt 2 failed for Reuters World News: Response ended prematurely
+2025-11-16 03:56:11,682 - ERROR - root - All attempts failed for Reuters World News: Response ended prematurely
+2025-11-16 03:56:11,684 - WARNING - root - ⚠️ No articles found from Reuters World News
+2025-11-16 03:56:12,686 - INFO - root - Scraping Al Jazeera English (attempt 1)...
+2025-11-16 03:56:18,971 - INFO - root - Found 0 articles from Al Jazeera English
+2025-11-16 03:56:18,973 - WARNING - root - ⚠️ No articles found from Al Jazeera English
+2025-11-16 03:56:19,975 - INFO - root - Scraping The Guardian World (attempt 1)...
+2025-11-16 03:56:26,487 - WARNING - root - Attempt 1 failed for The Guardian World: Response ended prematurely
+2025-11-16 03:56:28,490 - INFO - root - Scraping The Guardian World (attempt 2)...
+2025-11-16 03:56:37,541 - WARNING - root - Attempt 2 failed for The Guardian World: Response ended prematurely
+2025-11-16 03:56:37,543 - ERROR - root - All attempts failed for The Guardian World: Response ended prematurely
+2025-11-16 03:56:37,544 - WARNING - root - ⚠️ No articles found from The Guardian World
+2025-11-16 03:56:38,546 - INFO - root - Scraping The Hindu (India) (attempt 1)...
+2025-11-16 03:56:42,686 - WARNING - root - Attempt 1 failed for The Hindu (India): 500 Server Error: Internal Server Error for url: https://api.allorigins.win/get?url=https%3A//www.thehindu.com/news/international/feeder/default.rss
+2025-11-16 03:56:44,689 - INFO - root - Scraping The Hindu (India) (attempt 2)...
+2025-11-16 03:56:51,928 - INFO - root - Found 0 articles from The Hindu (India)
+2025-11-16 03:56:51,929 - WARNING - root - ⚠️ No articles found from The Hindu (India)
+2025-11-16 03:56:52,931 - INFO - root - Scraping CNN World (attempt 1)...
+2025-11-16 03:56:59,617 - WARNING - root - Attempt 1 failed for CNN World: Response ended prematurely
+2025-11-16 03:57:01,619 - INFO - root - Scraping CNN World (attempt 2)...
+2025-11-16 03:57:12,707 - INFO - root - Found 0 articles from CNN World
+2025-11-16 03:57:12,709 - WARNING - root - ⚠️ No articles found from CNN World
+2025-11-16 03:57:13,710 - INFO - root - Scraping NBC News World (attempt 1)...
+2025-11-16 03:57:19,496 - INFO - root - Found 15 articles from NBC News World
+2025-11-16 03:57:19,498 - INFO - root - ✅ Successfully got 15 articles from NBC News World
+2025-11-16 03:57:21,499 - INFO - root - Scraping DW News (Germany) (attempt 1)...
+2025-11-16 03:57:23,974 - INFO - root - Twitter client initialized - Access Level: Limited
+2025-11-16 03:57:26,144 - WARNING - root - API access limited, using simulated tweets: 403 Forbidden
+453 - You currently have access to a subset of X API V2 endpoints and limited v1.1 endpoints (e.g. media post, oauth) only. If you need access to this endpoint, you may need a different access level. You can learn more here: https://developer.x.com/en/portal/product
+2025-11-16 03:57:29,374 - INFO - root - Found 0 articles from DW News (Germany)
+2025-11-16 03:57:29,376 - WARNING - root - ⚠️ No articles found from DW News (Germany)
+2025-11-16 03:57:30,378 - INFO - root - Scraping Press TV (Iran) (attempt 1)...
+2025-11-16 03:57:34,836 - INFO - root - Found 15 articles from Press TV (Iran)
+2025-11-16 03:57:34,837 - INFO - root - ✅ Successfully got 15 articles from Press TV (Iran)
+2025-11-16 03:57:36,840 - INFO - root - Scraping Tehran Times (attempt 1)...
+2025-11-16 03:57:41,336 - INFO - root - Found 0 articles from Tehran Times
+2025-11-16 03:57:41,338 - WARNING - root - ⚠️ No articles found from Tehran Times
+2025-11-16 03:57:42,339 - INFO - root - Scraping Arab News (Saudi Arabia) (attempt 1)...
+2025-11-16 03:57:43,455 - INFO - root - Found 0 articles from Arab News (Saudi Arabia)
+2025-11-16 03:57:43,456 - WARNING - root - ⚠️ No articles found from Arab News (Saudi Arabia)
+2025-11-16 03:57:44,458 - INFO - root - Scraping Jerusalem Post (attempt 1)...
+2025-11-16 03:57:49,241 - INFO - root - Twitter client initialized - Access Level: Limited
+2025-11-16 03:57:53,091 - INFO - root - Found 0 articles from Jerusalem Post
+2025-11-16 03:57:53,093 - WARNING - root - ⚠️ No articles found from Jerusalem Post
+2025-11-16 03:57:54,095 - INFO - root - Scraping Daily Sabah (Turkey) (attempt 1)...
+2025-11-16 03:58:03,899 - INFO - root - Found 0 articles from Daily Sabah (Turkey)
+2025-11-16 03:58:03,901 - WARNING - root - ⚠️ No articles found from Daily Sabah (Turkey)
+2025-11-16 03:58:04,903 - INFO - root - Scraping China Daily (attempt 1)...
+2025-11-16 03:58:29,815 - WARNING - root - Attempt 1 failed for China Daily: HTTPSConnectionPool(host='api.allorigins.win', port=443): Read timed out.
+2025-11-16 03:58:31,817 - INFO - root - Scraping China Daily (attempt 2)...
+2025-11-16 03:58:44,537 - WARNING - root - Attempt 2 failed for China Daily: Response ended prematurely
+2025-11-16 03:58:44,538 - ERROR - root - All attempts failed for China Daily: Response ended prematurely
+2025-11-16 03:58:44,539 - WARNING - root - ⚠️ No articles found from China Daily
+2025-11-16 03:58:45,541 - INFO - root - Scraping completed: 2 successful, 12 failed
+2025-11-16 03:58:45,543 - INFO - root - Total unique articles: 30
+2025-11-16 03:58:46,994 - INFO - root - Scan completed. Found 30 articles, 6 approved.
