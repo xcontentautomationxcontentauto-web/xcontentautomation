@@ -1,12 +1,19 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_all
+
+datas = []
+binaries = []
+hiddenimports = ['tkinter', 'PIL', 'PIL._tkinter_finder', 'requests', 'urllib3', 'charset_normalizer', 'idna']
+tmp_ret = collect_all('pil')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
     ['twitter_bot_dashboard.py'],
     pathex=[],
-    binaries=[],
-    datas=[('bot_data', 'bot_data')],
-    hiddenimports=['tweepy', 'selenium', 'PIL', 'requests'],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

@@ -92,3 +92,11 @@
 2025-11-16 03:55:45 [INFO] system: Auto-scan triggered
 2025-11-16 03:55:45 [INFO] system: Starting enhanced news scan
 2025-11-16 03:58:46 [SUCCESS] system: Scan completed: 30 articles, 6 approved
+2025-11-16 04:03:46 [INFO] system: Auto-scan triggered
+2025-11-16 04:03:47 [INFO] system: Starting enhanced news scan
+2025-11-16 04:07:42 [SUCCESS] system: Scan completed: 30 articles, 6 approved
+2025-11-16 04:12:42 [INFO] system: Auto-scan triggered
+2025-11-16 04:12:42 [INFO] system: Starting enhanced news scan
+2025-11-16 04:15:36 [SUCCESS] system: Scan completed: 30 articles, 6 approved
+2025-11-16 04:15:52 [INFO] system: Tweet monitoring triggered
+2025-11-16 04:15:58 [SUCCESS] system: Tweet monitoring: 18 tweets, 18 approved
