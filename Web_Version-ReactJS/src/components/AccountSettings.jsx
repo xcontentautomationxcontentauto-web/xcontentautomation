@@ -19,7 +19,7 @@ const AccountSettings = ({ user }) => {
   const [testingConnection, setTestingConnection] = useState(false);
   const [showCredentials, setShowCredentials] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
-  const [retryCount, setRetryCount] = useState(0);
+  const [accessLevelInfo, setAccessLevelInfo] = useState(null);
 
   useEffect(() => {
     if (user) {
@@ -29,13 +29,8 @@ const AccountSettings = ({ user }) => {
 
   const loadAccountSettings = async () => {
     try {
-      if (!db) {
-        setSaveStatus('❌ Firebase not initialized');
-        return;
-      }
-
-      if (!user) {
-        setSaveStatus('⚠️ Please sign in to load settings');
+      if (!db || !user) {
+        setSaveStatus('❌ Please sign in to load settings');
         return;
       }
       
@@ -46,18 +41,9 @@ const AccountSettings = ({ user }) => {
         const data = docSnap.data();
         console.log('📥 Loaded account settings:', data);
         setAccounts(data);
-        setSaveStatus(`👤 Loaded settings for: ${user.email}`);
+        setSaveStatus(`✅ Loaded settings for: ${user.email}`);
       } else {
-        console.log('No existing settings found - will create on first save');
-        setSaveStatus(`👤 Signed in as: ${user.email} - Configure and save to create settings.`);
-        setAccounts({
-          source: '',
-          target: '',
-          consumerKey: '',
-          consumerSecret: '',
-          accessToken: '',
-          accessTokenSecret: ''
-        });
+        setSaveStatus(`👤 Signed in as: ${user.email} - Configure and save settings.`);
       }
     } catch (error) {
       console.error('❌ Error loading account settings:', error);
@@ -71,38 +57,26 @@ const AccountSettings = ({ user }) => {
     // Required field validation
     if (!accounts.source?.trim()) {
       errors.source = 'Source account username is required';
-    } else if (!accounts.source.match(/^@?[A-Za-z0-9_]{1,15}$/)) {
-      errors.source = 'Invalid Twitter username format';
     }
 
     if (!accounts.target?.trim()) {
       errors.target = 'Target account username is required';
-    } else if (!accounts.target.match(/^@?[A-Za-z0-9_]{1,15}$/)) {
-      errors.target = 'Invalid Twitter username format';
     }
 
     if (!accounts.consumerKey?.trim()) {
       errors.consumerKey = 'Consumer Key is required';
-    } else if (accounts.consumerKey.length < 10) {
-      errors.consumerKey = 'Consumer Key appears too short';
     }
 
     if (!accounts.consumerSecret?.trim()) {
       errors.consumerSecret = 'Consumer Secret is required';
-    } else if (accounts.consumerSecret.length < 10) {
-      errors.consumerSecret = 'Consumer Secret appears too short';
     }
 
     if (!accounts.accessToken?.trim()) {
       errors.accessToken = 'Access Token is required';
-    } else if (accounts.accessToken.length < 10) {
-      errors.accessToken = 'Access Token appears too short';
     }
 
     if (!accounts.accessTokenSecret?.trim()) {
       errors.accessTokenSecret = 'Access Token Secret is required';
-    } else if (accounts.accessTokenSecret.length < 10) {
-      errors.accessTokenSecret = 'Access Token Secret appears too short';
     }
 
     setValidationErrors(errors);
@@ -110,24 +84,18 @@ const AccountSettings = ({ user }) => {
   };
 
   const saveAccountSettings = async () => {
-    if (!db) {
-      setSaveStatus('❌ Firebase not connected');
-      return;
-    }
-
-    if (!user) {
+    if (!db || !user) {
       setSaveStatus('❌ Please sign in to save settings');
       return;
     }
 
-    // Validate all fields
     if (!validateCredentials()) {
-      setSaveStatus('❌ Please fix the validation errors before saving');
+      setSaveStatus('❌ Please fix validation errors before saving');
       return;
     }
 
     setLoading(true);
-    setSaveStatus('Saving...');
+    setSaveStatus('💾 Saving settings...');
     
     try {
       await setDoc(doc(db, 'settings', `accounts_${user.uid}`), {
@@ -138,7 +106,7 @@ const AccountSettings = ({ user }) => {
         createdAt: accounts.createdAt || new Date()
       });
       
-      console.log('✅ Settings saved and document created:', accounts);
+      console.log('✅ Settings saved:', accounts);
       setSaveStatus(`✅ Settings saved for: ${user.email}`);
       
       setTimeout(() => setSaveStatus(''), 3000);
@@ -165,11 +133,7 @@ const AccountSettings = ({ user }) => {
     }
   };
 
-  // Enhanced Twitter API verification with timeout protection and retry logic
   const verifyTwitterCredentials = async (accountType = 'both') => {
-    console.log(`🔍 Starting verification for: ${accountType}`);
-    
-    // Validate credentials before attempting verification
     if (!validateCredentials()) {
       setVerificationStatus({
         type: 'error',
@@ -180,10 +144,10 @@ const AccountSettings = ({ user }) => {
 
     setTestingConnection(true);
     setVerificationStatus({});
-    setRetryCount(0);
+    setAccessLevelInfo(null);
 
     try {
-      // Initialize Twitter client with all required credentials
+      // Initialize Twitter client
       TwitterService.initializeClient({
         consumerKey: accounts.consumerKey.trim(),
         consumerSecret: accounts.consumerSecret.trim(),
@@ -193,109 +157,78 @@ const AccountSettings = ({ user }) => {
 
       const results = {};
 
-      // Test API connection first (required for all verifications)
+      // Test API connection first
       setVerificationStatus({ type: 'info', message: '🔍 Testing Twitter API connection...' });
       
       try {
-        // Add timeout protection for API connection
-        const connectionTest = await withTimeout(
-          TwitterService.testConnection(),
-          15000,
-          'Twitter API connection timeout after 15 seconds'
-        );
+        const connectionTest = await TwitterService.testConnection();
         
         results.api = { 
           success: true, 
           data: connectionTest,
-          message: `✅ Connected as @${connectionTest.username} (${connectionTest.name})`
+          message: `✅ Connected as @${connectionTest.username}`
         };
-        console.log('✅ API connection successful:', connectionTest);
+        
+        // Set access level info
+        setAccessLevelInfo(TwitterService.getLimitations());
+        
       } catch (apiError) {
-        const errorMsg = apiError.message || 'Unknown API error';
         results.api = { 
           success: false, 
-          error: errorMsg,
-          message: `❌ API Connection Failed: ${errorMsg}`
+          error: apiError.message,
+          message: `❌ API Connection Failed: ${apiError.message}`
         };
-        console.error('❌ API connection failed:', apiError);
         
-        // If API connection fails, don't proceed with account verification
         setVerificationStatus({
           type: 'error',
-          message: `❌ Twitter API connection failed: ${errorMsg}`,
-          details: results,
-          retryable: isRetryableError(apiError)
+          message: `❌ Twitter API connection failed: ${apiError.message}`,
+          details: results
         });
         setTestingConnection(false);
         return;
       }
 
-      // Test specific accounts based on accountType with individual timeouts
+      // Test source account
       if (accountType === 'both' || accountType === 'source') {
         const sourceUsername = accounts.source.replace('@', '').trim();
         setVerificationStatus({ type: 'info', message: `🔍 Testing source account: @${sourceUsername}...` });
+        
         try {
-          const sourceTweets = await withTimeout(
-            TwitterService.getUserTweets(sourceUsername, 3),
-            10000,
-            `Source account verification timeout for @${sourceUsername}`
-          );
+          const sourceData = await TwitterService.getUserTweets(sourceUsername, 3);
           
           results.source = { 
             success: true, 
-            data: { 
-              username: sourceUsername,
-              tweetsFound: sourceTweets.length,
-              latestTweet: sourceTweets[0]?.text?.substring(0, 100) + '...' || 'No tweets found',
-              accountExists: true
-            },
-            message: `✅ Source account @${sourceUsername} verified (${sourceTweets.length} tweets found)`
+            data: sourceData,
+            message: `✅ Source account @${sourceUsername} verified`
           };
-          console.log(`✅ Source account verified: ${sourceUsername}`, results.source.data);
         } catch (sourceError) {
-          const errorMsg = sourceError.message || 'Unknown error';
           results.source = { 
             success: false, 
-            error: errorMsg,
-            accountExists: false,
-            message: `❌ Source account @${sourceUsername} verification failed: ${errorMsg}`,
-            retryable: isRetryableError(sourceError)
+            error: sourceError.message,
+            message: `❌ Source account @${sourceUsername} verification failed`
           };
-          console.error(`❌ Source account verification failed:`, sourceError);
         }
       }
 
+      // Test target account
       if (accountType === 'both' || accountType === 'target') {
         const targetUsername = accounts.target.replace('@', '').trim();
         setVerificationStatus({ type: 'info', message: `🔍 Testing target account: @${targetUsername}...` });
+        
         try {
-          const targetTweets = await withTimeout(
-            TwitterService.getUserTweets(targetUsername, 3),
-            10000,
-            `Target account verification timeout for @${targetUsername}`
-          );
+          const targetData = await TwitterService.getUserTweets(targetUsername, 3);
           
           results.target = { 
             success: true, 
-            data: { 
-              username: targetUsername,
-              tweetsFound: targetTweets.length,
-              latestTweet: targetTweets[0]?.text?.substring(0, 100) + '...' || 'No tweets found',
-              accountExists: true
-            },
-            message: `✅ Target account @${targetUsername} verified (${targetTweets.length} tweets found)`
+            data: targetData,
+            message: `✅ Target account @${targetUsername} verified`
           };
-          console.log(`✅ Target account verified: ${targetUsername}`, results.target.data);
         } catch (targetError) {
-          const errorMsg = targetError.message || 'Unknown error';
           results.target = { 
             success: false, 
             error: targetError.message,
-            accountExists: false,
-            message: `❌ Target account @${targetUsername} verification failed: ${errorMsg}`,
-            retryable: isRetryableError(targetError)
+            message: `❌ Target account @${targetUsername} verification failed`
           };
-          console.error(`❌ Target account verification failed:`, targetError);
         }
       }
 
@@ -310,13 +243,9 @@ const AccountSettings = ({ user }) => {
           details: results
         });
       } else if (successfulAccounts.length > 0) {
-        const failedAccounts = accountResults
-          .filter(([_, result]) => !result.success)
-          .map(([key]) => key);
-        
         setVerificationStatus({
           type: 'warning',
-          message: `⚠️ Partial success: ${failedAccounts.join(', ')} failed`,
+          message: `⚠️ Partial success - some verifications failed`,
           details: results
         });
       } else {
@@ -331,95 +260,20 @@ const AccountSettings = ({ user }) => {
       console.error('❌ Twitter verification failed:', error);
       setVerificationStatus({
         type: 'error',
-        message: `❌ Verification process error: ${error.message}`,
-        details: { error: error.message },
-        retryable: isRetryableError(error)
+        message: `❌ Verification process error: ${error.message}`
       });
     } finally {
       setTestingConnection(false);
     }
   };
 
-  // Helper function for timeout protection
-  const withTimeout = (promise, timeoutMs, errorMessage = 'Operation timed out') => {
-    return new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new Error(errorMessage));
-      }, timeoutMs);
-
-      promise
-        .then((result) => {
-          clearTimeout(timeoutId);
-          resolve(result);
-        })
-        .catch((error) => {
-          clearTimeout(timeoutId);
-          reject(error);
-        });
-    });
-  };
-
-  // Helper function to determine if error is retryable
-  const isRetryableError = (error) => {
-    if (!error || !error.message) return false;
-    
-    const retryableErrors = [
-      'timeout',
-      'network',
-      'rate limit',
-      'too many requests',
-      'server error',
-      'service unavailable',
-      'gateway',
-      'temporarily'
-    ];
-    
-    const errorLower = error.message.toLowerCase();
-    return retryableErrors.some(retryableError => errorLower.includes(retryableError));
-  };
-
-  // Retry verification with exponential backoff
-  const retryVerification = async (accountType = 'both') => {
-    const maxRetries = 3;
-    if (retryCount >= maxRetries) {
-      setVerificationStatus({
-        type: 'error',
-        message: `❌ Maximum retry attempts (${maxRetries}) reached. Please check your connection.`
-      });
-      return;
-    }
-
-    const delay = Math.min(1000 * Math.pow(2, retryCount), 10000); // Exponential backoff max 10s
-    setRetryCount(prev => prev + 1);
-    
-    setVerificationStatus({
-      type: 'info',
-      message: `🔄 Retrying verification (attempt ${retryCount + 1}/${maxRetries}) in ${delay/1000}s...`
-    });
-
-    setTimeout(() => {
-      verifyTwitterCredentials(accountType);
-    }, delay);
-  };
-
-  // Quick verification for individual accounts with timeout protection
   const quickVerifyAccount = async (accountType) => {
     const username = accountType === 'source' ? accounts.source : accounts.target;
     
-    // Quick validation
     if (!username?.trim()) {
       setVerificationStatus({
         type: 'error',
         message: `❌ Please enter ${accountType} account username first`
-      });
-      return;
-    }
-
-    if (!accounts.consumerKey?.trim() || !accounts.consumerSecret?.trim() || 
-        !accounts.accessToken?.trim() || !accounts.accessTokenSecret?.trim()) {
-      setVerificationStatus({
-        type: 'error',
-        message: '❌ Please enter all Twitter API credentials first'
       });
       return;
     }
@@ -436,168 +290,39 @@ const AccountSettings = ({ user }) => {
         accessTokenSecret: accounts.accessTokenSecret.trim()
       });
 
-      // Test API connection first with timeout
-      await withTimeout(
-        TwitterService.testConnection(),
-        10000,
-        'Quick verification timeout'
-      );
-
-      const tweets = await withTimeout(
-        TwitterService.getUserTweets(cleanUsername, 2),
-        8000,
-        `Account @${cleanUsername} verification timeout`
-      );
+      const tweets = await TwitterService.getUserTweets(cleanUsername, 2);
       
       setVerificationStatus({
         type: 'success',
-        message: `✅ ${accountType === 'source' ? 'Source' : 'Target'} account @${cleanUsername} verified! Found ${tweets.length} recent tweets.`,
-        details: {
-          [accountType]: {
-            success: true,
-            data: {
-              username: cleanUsername,
-              tweetsFound: tweets.length,
-              latestTweet: tweets[0]?.text?.substring(0, 80) + '...' || 'No recent tweets'
-            }
-          }
-        }
+        message: `✅ ${accountType === 'source' ? 'Source' : 'Target'} account @${cleanUsername} verified! Found ${tweets.tweets.length} recent tweets.`
       });
 
     } catch (error) {
-      const errorMsg = error.message || 'Unknown verification error';
       setVerificationStatus({
         type: 'error',
-        message: `❌ ${accountType === 'source' ? 'Source' : 'Target'} account verification failed: ${errorMsg}`,
-        details: {
-          [accountType]: {
-            success: false,
-            error: errorMsg,
-            retryable: isRetryableError(error)
-          }
-        }
+        message: `❌ ${accountType === 'source' ? 'Source' : 'Target'} account verification failed: ${error.message}`
       });
     } finally {
       setTestingConnection(false);
     }
   };
 
-  const testFirebaseConnection = async () => {
-    try {
-      if (!db) {
-        setSaveStatus('❌ Firebase not initialized');
-        return;
-      }
-
-      if (!user) {
-        setSaveStatus('❌ Please sign in to test connection');
-        return;
-      }
-      
-      const testDoc = doc(db, 'settings', `test_${user.uid}`);
-      await setDoc(testDoc, { test: true, timestamp: new Date(), userId: user.uid });
-      const docSnap = await getDoc(testDoc);
-      
-      if (docSnap.exists()) {
-        setSaveStatus(`✅ Firebase connection successful for: ${user.email}`);
-      } else {
-        setSaveStatus('❌ Firebase test failed: Document not found');
-      }
-    } catch (error) {
-      setSaveStatus('❌ Firebase connection failed: ' + error.message);
-    }
-  };
-
-  const initializeFirestore = async () => {
-    try {
-      if (!db) {
-        setSaveStatus('❌ Firebase not initialized');
-        return;
-      }
-
-      if (!user) {
-        setSaveStatus('❌ Please sign in to initialize Firestore');
-        return;
-      }
-      
-      const initialSettings = {
-        source: accounts.source || '',
-        target: accounts.target || '', 
-        consumerKey: accounts.consumerKey || '',
-        consumerSecret: accounts.consumerSecret || '',
-        accessToken: accounts.accessToken || '',
-        accessTokenSecret: accounts.accessTokenSecret || '',
-        userId: user.uid,
-        userEmail: user.email,
-        createdAt: new Date()
-      };
-      
-      await setDoc(doc(db, 'settings', `accounts_${user.uid}`), initialSettings);
-      
-      await setDoc(doc(db, 'statistics', `current_${user.uid}`), {
-        totalScanned: 0,
-        aiApproved: 0,
-        posted: 0,
-        rejected: 0,
-        lastScan: null,
-        lastUpdate: new Date(),
-        userId: user.uid
-      });
-
-      await setDoc(doc(db, 'settings', `ai_${user.uid}`), {
-        keywords: ['stocks', 'jumpy sales', 'rebots'],
-        customText: '🚀 Check this out:',
-        enableSentiment: false,
-        requireApproval: true,
-        userId: user.uid,
-        createdAt: new Date()
-      });
-
-      await setDoc(doc(db, 'settings', `news_${user.uid}`), {
-        sources: ['https://www.bbcedge.org/us/en/', 'https://www.reuters.com/business/'],
-        scanFrequency: 300,
-        userId: user.uid,
-        createdAt: new Date()
-      });
-      
-      setSaveStatus(`✅ Firestore initialized for: ${user.email}`);
-      
-      setTimeout(() => {
-        loadAccountSettings();
-      }, 1000);
-      
-    } catch (error) {
-      console.error('❌ Error initializing Firestore:', error);
-      setSaveStatus('❌ Initialization failed: ' + error.message);
-    }
-  };
-
-  const clearVerificationStatus = () => {
-    setVerificationStatus({});
-    setRetryCount(0);
-  };
-
-  const clearValidationErrors = () => {
-    setValidationErrors({});
-  };
-
   return (
     <div className="card">
       <div className="card-header">
-        <h2 className="card-title">X Account Settings</h2>
-        <span className="status-badge status-active">Active</span>
+        <h2 className="card-title">🔑 X Account Settings</h2>
+        <span className="status-badge status-active">Essential Tier</span>
       </div>
       
       <p className="card-subtitle">
-        Configure your source and target X accounts. Posts from Account A will be shared via Account B after AI analysis.
+        Configure your X accounts for content automation. Essential tier provides read-only access.
       </p>
 
       {/* Status Messages */}
       {saveStatus && (
         <div className={`status-message ${
           saveStatus.includes('✅') ? 'success' : 
-          saveStatus.includes('❌') ? 'error' : 
-          saveStatus.includes('⚠️') ? 'info' : 'info'
+          saveStatus.includes('❌') ? 'error' : 'info'
         }`}>
           {saveStatus}
         </div>
@@ -607,104 +332,49 @@ const AccountSettings = ({ user }) => {
         <div className={`verification-status ${verificationStatus.type}`}>
           <div className="verification-header">
             <span>{verificationStatus.message}</span>
-            <div className="verification-actions">
-              {verificationStatus.retryable && retryCount < 3 && (
-                <button 
-                  className="btn btn-secondary btn-small"
-                  onClick={() => retryVerification('both')}
-                  disabled={testingConnection}
-                >
-                  🔄 Retry
-                </button>
-              )}
-              <button 
-                className="btn-clear"
-                onClick={clearVerificationStatus}
-                title="Clear status"
-              >
-                ×
-              </button>
-            </div>
+            <button 
+              className="btn-clear"
+              onClick={() => setVerificationStatus({})}
+            >
+              ×
+            </button>
           </div>
-          
-          {verificationStatus.details && (
-            <div className="verification-details">
-              <h4>Verification Details:</h4>
-              {verificationStatus.details.api && (
-                <div className="verification-item">
-                  <strong>API Connection:</strong> 
-                  <span className={verificationStatus.details.api.success ? 'success' : 'error'}>
-                    {verificationStatus.details.api.success ? '✅ Success' : '❌ Failed'}
-                  </span>
-                  {verificationStatus.details.api.data && (
-                    <div className="verification-data">
-                      Username: {verificationStatus.details.api.data.username}<br />
-                      Name: {verificationStatus.details.api.data.name}<br />
-                      User ID: {verificationStatus.details.api.data.id}
-                    </div>
-                  )}
-                  {verificationStatus.details.api.error && (
-                    <div className="verification-error">
-                      Error: {verificationStatus.details.api.error}
-                      {verificationStatus.details.api.retryable && (
-                        <div className="retry-hint">🔄 This error might be temporary. Try again.</div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-              {verificationStatus.details.source && (
-                <div className="verification-item">
-                  <strong>Source Account ({accounts.source}):</strong> 
-                  <span className={verificationStatus.details.source.success ? 'success' : 'error'}>
-                    {verificationStatus.details.source.success ? '✅ Success' : '❌ Failed'}
-                  </span>
-                  {verificationStatus.details.source.data && (
-                    <div className="verification-data">
-                      Tweets Found: {verificationStatus.details.source.data.tweetsFound}<br />
-                      Latest: {verificationStatus.details.source.data.latestTweet}
-                    </div>
-                  )}
-                  {verificationStatus.details.source.error && (
-                    <div className="verification-error">
-                      Error: {verificationStatus.details.source.error}
-                      {verificationStatus.details.source.retryable && (
-                        <div className="retry-hint">🔄 This error might be temporary. Try again.</div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-              {verificationStatus.details.target && (
-                <div className="verification-item">
-                  <strong>Target Account ({accounts.target}):</strong> 
-                  <span className={verificationStatus.details.target.success ? 'success' : 'error'}>
-                    {verificationStatus.details.target.success ? '✅ Success' : '❌ Failed'}
-                  </span>
-                  {verificationStatus.details.target.data && (
-                    <div className="verification-data">
-                      Tweets Found: {verificationStatus.details.target.data.tweetsFound}<br />
-                      Latest: {verificationStatus.details.target.data.latestTweet}
-                    </div>
-                  )}
-                  {verificationStatus.details.target.error && (
-                    <div className="verification-error">
-                      Error: {verificationStatus.details.target.error}
-                      {verificationStatus.details.target.retryable && (
-                        <div className="retry-hint">🔄 This error might be temporary. Try again.</div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       )}
 
-      {!user && (
-        <div className="status-message info">
-          🔐 Please sign in to access and save account settings.
+      {/* Access Level Information */}
+      {accessLevelInfo && (
+        <div className="access-level-info">
+          <h4>🔒 Access Level: {accessLevelInfo.accessLevel}</h4>
+          <div className="access-details">
+            <div className="capabilities">
+              <strong>✅ Available:</strong>
+              <ul>
+                {accessLevelInfo.capabilities.map((cap, index) => (
+                  <li key={index}>{cap}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="limitations">
+              <strong>❌ Limitations:</strong>
+              <ul>
+                {accessLevelInfo.limitations.map((lim, index) => (
+                  <li key={index}>{lim}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div className="rate-limits">
+            <strong>📊 Rate Limits:</strong>
+            <div className="rate-grid">
+              {Object.entries(accessLevelInfo.rateLimits).map(([endpoint, limit]) => (
+                <div key={endpoint} className="rate-item">
+                  <span className="endpoint">{endpoint}:</span>
+                  <span className="limit">{limit}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -742,7 +412,7 @@ const AccountSettings = ({ user }) => {
         </div>
       </div>
 
-      {/* Credentials Toggle */}
+      {/* Credentials Section */}
       <div className="form-group">
         <label className="toggle-label">
           <input
@@ -751,21 +421,15 @@ const AccountSettings = ({ user }) => {
             onChange={(e) => setShowCredentials(e.target.checked)}
           />
           <span className="toggle-slider"></span>
-          <span>Show API Credentials</span>
+          <span>🔑 Show API Credentials</span>
         </label>
       </div>
 
       {showCredentials && (
-        <>
+        <div className="credentials-section">
           <div className="credentials-info">
-            <h4>🔑 Twitter API Credentials</h4>
-            <p>You need all four credentials from the <a href="https://developer.twitter.com/" target="_blank" rel="noopener noreferrer">Twitter Developer Portal</a>:</p>
-            <ul>
-              <li>API Key (Consumer Key)</li>
-              <li>API Secret Key (Consumer Secret)</li>
-              <li>Access Token</li>
-              <li>Access Token Secret</li>
-            </ul>
+            <h4>Twitter API Credentials</h4>
+            <p>Get these from the <a href="https://developer.twitter.com/" target="_blank" rel="noopener noreferrer">Twitter Developer Portal</a></p>
           </div>
 
           <div className="grid grid-2">
@@ -835,83 +499,47 @@ const AccountSettings = ({ user }) => {
               )}
             </div>
           </div>
-
-          {Object.keys(validationErrors).length > 0 && (
-            <div className="validation-summary">
-              <button 
-                className="btn btn-secondary btn-small"
-                onClick={clearValidationErrors}
-              >
-                Clear All Errors
-              </button>
-            </div>
-          )}
-        </>
+        </div>
       )}
 
-      {/* Enhanced Action Buttons */}
-      <div className="form-group" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+      {/* Action Buttons */}
+      <div className="action-buttons">
         <button 
           className="btn btn-primary" 
           onClick={saveAccountSettings}
-          disabled={loading || !user || Object.keys(validationErrors).length > 0}
+          disabled={loading || !user}
         >
           {loading ? <div className="spinner"></div> : '💾'}
-          Save Account Settings
+          Save Settings
         </button>
         
         <button 
           className="btn btn-success" 
           onClick={() => verifyTwitterCredentials('both')}
-          disabled={testingConnection || !user || Object.keys(validationErrors).length > 0}
+          disabled={testingConnection || !user}
         >
           {testingConnection ? <div className="spinner"></div> : '🔍'}
           Verify Both Accounts
         </button>
-      </div>
 
-      <div className="form-group" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem' }}>
         <button 
           className="btn btn-secondary" 
           onClick={() => quickVerifyAccount('source')}
-          disabled={testingConnection || !user || !accounts.source || Object.keys(validationErrors).length > 0}
+          disabled={testingConnection || !user || !accounts.source}
         >
-          🎯 Quick Verify Source
+          🎯 Verify Source
         </button>
         
         <button 
           className="btn btn-secondary" 
           onClick={() => quickVerifyAccount('target')}
-          disabled={testingConnection || !user || !accounts.target || Object.keys(validationErrors).length > 0}
+          disabled={testingConnection || !user || !accounts.target}
         >
-          🎯 Quick Verify Target
-        </button>
-        
-        <button 
-          className="btn btn-secondary" 
-          onClick={initializeFirestore}
-          disabled={!user}
-        >
-          🚀 Initialize Firestore
-        </button>
-        
-        <button 
-          className="btn btn-secondary" 
-          onClick={loadAccountSettings}
-          disabled={!user}
-        >
-          🔄 Load Settings
-        </button>
-        
-        <button 
-          className="btn btn-secondary" 
-          onClick={testFirebaseConnection}
-          disabled={!user}
-        >
-          🔍 Test Firebase
+          🎯 Verify Target
         </button>
       </div>
 
+      {/* Connection Status */}
       {user && (
         <div className="connection-status">
           <h4>Connection Status:</h4>
@@ -928,21 +556,13 @@ const AccountSettings = ({ user }) => {
             <div className="status-item">
               <strong>Twitter API:</strong> 
               <span className={
-                accounts.consumerKey && accounts.consumerSecret && accounts.accessToken && accounts.accessTokenSecret 
-                  ? 'success' 
-                  : 'warning'
+                accounts.consumerKey && accounts.consumerSecret ? 'success' : 'warning'
               }>
-                {accounts.consumerKey && accounts.consumerSecret && accounts.accessToken && accounts.accessTokenSecret 
-                  ? '🔑 All Credentials Set' 
-                  : '⚠️ Missing Credentials'
+                {accounts.consumerKey && accounts.consumerSecret 
+                  ? '🔑 Credentials Set' 
+                  : '⚠️ Setup Required'
                 }
               </span>
-            </div>
-            <div className="status-item">
-              <strong>Source Account:</strong> {accounts.source || 'Not set'}
-            </div>
-            <div className="status-item">
-              <strong>Target Account:</strong> {accounts.target || 'Not set'}
             </div>
           </div>
         </div>
